@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -15,7 +17,7 @@ use Doctrine\Common\Util\ClassUtils;
 use Sonata\AdminBundle\Form\ChoiceList\ModelChoiceList;
 use Sonata\AdminBundle\Form\ChoiceList\ModelChoiceLoader;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
-use Sonata\CoreBundle\Model\Adapter\AdapterInterface;
+use Sonata\Doctrine\Adapter\AdapterInterface;
 use Symfony\Component\Form\ChoiceList\LazyChoiceList;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\RuntimeException;
@@ -61,9 +63,9 @@ class ModelsToArrayTransformer implements DataTransformerInterface
         __construct() signature should be : public function __construct(ModelManager $modelManager, $class)
          */
 
-        $args = func_get_args();
+        $args = \func_get_args();
 
-        if (3 == func_num_args()) {
+        if (3 === \func_num_args()) {
             $this->legacyConstructor($args);
         } else {
             $this->modelManager = $args[0];
@@ -137,7 +139,7 @@ class ModelsToArrayTransformer implements DataTransformerInterface
 
     public function reverseTransform($keys)
     {
-        if (!is_array($keys)) {
+        if (!\is_array($keys)) {
             throw new UnexpectedTypeException($keys, 'array');
         }
 
@@ -153,7 +155,7 @@ class ModelsToArrayTransformer implements DataTransformerInterface
             }
         }
 
-        if (count($notFound) > 0) {
+        if (\count($notFound) > 0) {
             throw new TransformationFailedException(sprintf('The entities with keys "%s" could not be found', implode('", "', $notFound)));
         }
 
@@ -163,11 +165,9 @@ class ModelsToArrayTransformer implements DataTransformerInterface
     /**
      * Simulates the old constructor for BC.
      *
-     * @param array $args
-     *
      * @throws RuntimeException
      */
-    private function legacyConstructor($args)
+    private function legacyConstructor(array $args)
     {
         $choiceList = $args[0];
 
@@ -185,10 +185,8 @@ class ModelsToArrayTransformer implements DataTransformerInterface
 
     /**
      * @param object $entity
-     *
-     * @return array
      */
-    private function getIdentifierValues($entity)
+    private function getIdentifierValues($entity): array
     {
         try {
             return $this->modelManager->getIdentifierValues($entity);
@@ -200,12 +198,11 @@ class ModelsToArrayTransformer implements DataTransformerInterface
     /**
      * @internal
      */
-    private function triggerDeprecation()
+    private function triggerDeprecation(): void
     {
         @trigger_error(sprintf(
-                'Using the "%s::$choiceList" property is deprecated since version 3.12 and will be removed in 4.0.',
-                __CLASS__),
-            E_USER_DEPRECATED)
-        ;
+            'Using the "%s::$choiceList" property is deprecated since version 3.12 and will be removed in 4.0.',
+            __CLASS__
+        ), E_USER_DEPRECATED);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -71,7 +73,7 @@ class ListMapper extends BaseMapper
     public function add($name, $type = null, array $fieldDescriptionOptions = [])
     {
         // Change deprecated inline action "view" to "show"
-        if ('_action' == $name && 'actions' == $type) {
+        if ('_action' === $name && 'actions' === $type) {
             if (isset($fieldDescriptionOptions['actions']['view'])) {
                 @trigger_error(
                     'Inline action "view" is deprecated since version 2.2.4 and will be removed in 4.0. '
@@ -86,14 +88,14 @@ class ListMapper extends BaseMapper
         }
 
         // Ensure batch and action pseudo-fields are tagged as virtual
-        if (in_array($type, ['actions', 'batch', 'select'])) {
+        if (\in_array($type, ['actions', 'batch', 'select'], true)) {
             $fieldDescriptionOptions['virtual_field'] = true;
         }
 
         if ($name instanceof FieldDescriptionInterface) {
             $fieldDescription = $name;
             $fieldDescription->mergeOptions($fieldDescriptionOptions);
-        } elseif (is_string($name)) {
+        } elseif (\is_string($name)) {
             if ($this->admin->hasListFieldDescription($name)) {
                 throw new \RuntimeException(sprintf(
                     'Duplicate field name "%s" in list mapper. Names should be unique.',
@@ -117,6 +119,13 @@ class ListMapper extends BaseMapper
             $fieldDescription->setOption(
                 'label',
                 $this->admin->getLabelTranslatorStrategy()->getLabel($fieldDescription->getName(), 'list', 'label')
+            );
+        }
+
+        if (isset($fieldDescriptionOptions['header_style'])) {
+            @trigger_error(
+                'The "header_style" option is deprecated, please, use "header_class" option instead.',
+                E_USER_DEPRECATED
             );
         }
 

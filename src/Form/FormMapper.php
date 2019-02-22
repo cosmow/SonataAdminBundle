@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -47,8 +49,8 @@ class FormMapper extends BaseGroupedMapper
     }
 
     /**
-     * @param string $name
-     * @param string $type
+     * @param FormBuilderInterface|string $name
+     * @param string                      $type
      *
      * @return $this
      */
@@ -84,10 +86,10 @@ class FormMapper extends BaseGroupedMapper
 
         // Try to autodetect type
         if ($name instanceof FormBuilderInterface && null === $type) {
-            $fieldDescriptionOptions['type'] = get_class($name->getType()->getInnerType());
+            $fieldDescriptionOptions['type'] = \get_class($name->getType()->getInnerType());
         }
 
-        if (!isset($fieldDescriptionOptions['type']) && is_string($type)) {
+        if (!isset($fieldDescriptionOptions['type']) && \is_string($type)) {
             $fieldDescriptionOptions['type'] = $type;
         }
 
@@ -104,7 +106,7 @@ class FormMapper extends BaseGroupedMapper
         // Note that the builder var is actually the formContractor:
         $this->builder->fixFieldDescription($this->admin, $fieldDescription, $fieldDescriptionOptions);
 
-        if ($fieldName != $name) {
+        if ($fieldName !== $name) {
             $fieldDescription->setName($fieldName);
         }
 
@@ -197,12 +199,12 @@ class FormMapper extends BaseGroupedMapper
         unset($groups[$group]);
 
         $tabs = $this->getTabs();
-        $key = array_search($group, $tabs[$tab]['groups']);
+        $key = array_search($group, $tabs[$tab]['groups'], true);
 
         if (false !== $key) {
             unset($tabs[$tab]['groups'][$key]);
         }
-        if ($deleteEmptyTab && 0 == count($tabs[$tab]['groups'])) {
+        if ($deleteEmptyTab && 0 === \count($tabs[$tab]['groups'])) {
             unset($tabs[$tab]);
         }
 

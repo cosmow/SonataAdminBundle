@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -19,7 +21,7 @@ class Validators
     /**
      * @static
      *
-     * @param string $username
+     * @param string|null $username
      *
      * @throws \InvalidArgumentException
      *
@@ -123,7 +125,7 @@ class Validators
             ));
         }
 
-        if ('Controller' != substr($controllerClassBasename, -10)) {
+        if ('Controller' !== substr($controllerClassBasename, -10)) {
             throw new \InvalidArgumentException('The controller class name must end with "Controller".');
         }
 

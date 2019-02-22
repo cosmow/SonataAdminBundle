@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -84,7 +86,7 @@ class ModelType extends AbstractType
         $options = [];
         $propertyAccessor = $this->propertyAccessor;
         $options['choice_loader'] = function (Options $options, $previousValue) use ($propertyAccessor) {
-            if ($previousValue && count($choices = $previousValue->getChoices())) {
+            if ($previousValue && \count($choices = $previousValue->getChoices())) {
                 return $choices;
             }
 

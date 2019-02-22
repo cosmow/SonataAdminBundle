@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -35,6 +37,7 @@ class ModelReferenceType extends AbstractType
      */
     public function setDefaultOptions(OptionsResolverInterface $resolver)
     {
+        \assert($resolver instanceof OptionsResolver);
         $this->configureOptions($resolver);
     }
 

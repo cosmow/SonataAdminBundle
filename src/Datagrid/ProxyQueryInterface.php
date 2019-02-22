@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -64,7 +66,7 @@ interface ProxyQueryInterface
     public function getSingleScalarResult();
 
     /**
-     * @param int $firstResult
+     * @param int|null $firstResult
      *
      * @return ProxyQueryInterface
      */
@@ -76,7 +78,7 @@ interface ProxyQueryInterface
     public function getFirstResult();
 
     /**
-     * @param int $maxResults
+     * @param int|null $maxResults
      *
      * @return ProxyQueryInterface
      */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -14,12 +16,16 @@ namespace Sonata\AdminBundle\Annotation;
 use JMS\DiExtraBundle\Annotation\MetadataProcessorInterface;
 use JMS\DiExtraBundle\Metadata\ClassMetadata;
 use Sonata\AdminBundle\Admin\AbstractAdmin as AdminClass;
+use Sonata\AdminBundle\Controller\CRUDController;
 
 /**
  * Use annotations to define admin classes.
  *
  * @Annotation
  * @Target("CLASS")
+ *
+ * @deprecated since 3.x, to be removed in 4.0.
+ * @see https://github.com/kunicmarko20/SonataAutoConfigureBundle
  */
 class Admin implements MetadataProcessorInterface
 {
@@ -78,7 +84,7 @@ class Admin implements MetadataProcessorInterface
     /**
      * @var string
      */
-    public $baseControllerName = 'SonataAdminBundle:CRUD';
+    public $baseControllerName = CRUDController::class;
 
     /**
      * @var string
@@ -133,10 +139,7 @@ class Admin implements MetadataProcessorInterface
         }
     }
 
-    /**
-     * Check if all the required fields are given.
-     */
-    private function validate()
+    private function validate(): void
     {
         if (!$this->showInDashboard) {
             return;
@@ -154,10 +157,8 @@ class Admin implements MetadataProcessorInterface
 
     /**
      * Set group and label from class name it not set.
-     *
-     * @param $name
      */
-    private function generateFallback($name)
+    private function generateFallback($name): void
     {
         if (empty($name)) {
             return;

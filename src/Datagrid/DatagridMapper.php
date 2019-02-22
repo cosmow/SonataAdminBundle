@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -55,7 +57,7 @@ class DatagridMapper extends BaseMapper
         $fieldOptions = null,
         array $fieldDescriptionOptions = []
     ) {
-        if (is_array($fieldOptions)) {
+        if (\is_array($fieldOptions)) {
             $filterOptions['field_options'] = $fieldOptions;
         }
 
@@ -66,7 +68,7 @@ class DatagridMapper extends BaseMapper
         if ($name instanceof FieldDescriptionInterface) {
             $fieldDescription = $name;
             $fieldDescription->mergeOptions($filterOptions);
-        } elseif (is_string($name)) {
+        } elseif (\is_string($name)) {
             if ($this->admin->hasFilterFieldDescription($name)) {
                 throw new \RuntimeException(sprintf('Duplicate field name "%s" in datagrid mapper. Names should be unique.', $name));
             }

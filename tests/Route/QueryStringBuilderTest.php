@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -22,7 +24,7 @@ class QueryStringBuilderTest extends TestCase
     /**
      * @dataProvider getBuildTests
      */
-    public function testBuild(array $expectedRoutes, $hasReader, $aclEnabled, $getParent)
+    public function testBuild(array $expectedRoutes, $hasReader, $aclEnabled, $getParent): void
     {
         $audit = $this->getMockForAbstractClass(AuditManagerInterface::class);
         $audit->expects($this->once())->method('hasReader')->will($this->returnValue($hasReader));
@@ -38,7 +40,7 @@ class QueryStringBuilderTest extends TestCase
 
         $pathBuilder->build($admin, $routeCollection);
 
-        $this->assertCount(count($expectedRoutes), $routeCollection->getElements());
+        $this->assertCount(\count($expectedRoutes), $routeCollection->getElements());
 
         foreach ($expectedRoutes as $expectedRoute) {
             $this->assertTrue($routeCollection->has($expectedRoute), sprintf('Expected route: "%s" doesn`t exist.', $expectedRoute));
@@ -55,7 +57,7 @@ class QueryStringBuilderTest extends TestCase
         ];
     }
 
-    public function testBuildWithChildren()
+    public function testBuildWithChildren(): void
     {
         $audit = $this->getMockForAbstractClass(AuditManagerInterface::class);
         $audit->expects($this->once())->method('hasReader')->will($this->returnValue(true));
@@ -85,7 +87,7 @@ class QueryStringBuilderTest extends TestCase
         $pathBuilder->build($admin, $routeCollection);
 
         $expectedRoutes = ['list', 'create', 'batch', 'edit', 'delete', 'show', 'export', 'history', 'history_view_revision', 'history_compare_revisions', 'acl', 'child1.Code.Route.foo', 'child1.Code.Route.bar', 'child2.Code.Route.baz'];
-        $this->assertCount(count($expectedRoutes), $routeCollection->getElements());
+        $this->assertCount(\count($expectedRoutes), $routeCollection->getElements());
 
         foreach ($expectedRoutes as $expectedRoute) {
             $this->assertTrue($routeCollection->has($expectedRoute), sprintf('Expected route: "%s" doesn`t exist.', $expectedRoute));

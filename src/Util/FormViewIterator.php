@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -35,7 +37,7 @@ class FormViewIterator implements \RecursiveIterator
 
     public function hasChildren()
     {
-        return count($this->current()->children) > 0;
+        return \count($this->current()->children) > 0;
     }
 
     public function current()

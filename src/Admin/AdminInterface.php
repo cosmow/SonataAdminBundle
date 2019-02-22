@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -17,12 +19,12 @@ use Sonata\AdminBundle\Builder\FormContractorInterface;
 use Sonata\AdminBundle\Builder\ListBuilderInterface;
 use Sonata\AdminBundle\Builder\RouteBuilderInterface;
 use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
+use Sonata\AdminBundle\Object\MetadataInterface;
 use Sonata\AdminBundle\Security\Handler\SecurityHandlerInterface;
 use Sonata\AdminBundle\Translator\LabelTranslatorStrategyInterface;
-use Sonata\CoreBundle\Model\Metadata;
-use Sonata\CoreBundle\Validator\ErrorElement;
-use Symfony\Component\Form\Form;
+use Sonata\Form\Validator\ErrorElement;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -122,7 +124,7 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
     /**
      * Returns a form depend on the given $object.
      *
-     * @return Form
+     * @return FormInterface
      */
     public function getForm();
 
@@ -205,23 +207,6 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
      * @return bool
      */
     public function hasRoute($name);
-
-    /**
-     * Check the current request is given route or not.
-     *
-     * TODO: uncomment this method before releasing 4.0
-     *
-     * ```
-     * $this->isCurrentRoute('create'); // is create page?
-     * $this->isCurrentRoute('edit', 'some.admin.code'); // is some.admin.code admin's edit page?
-     * ```
-     *
-     * @param string $name
-     * @param string $adminCode
-     *
-     * @return bool
-     */
-    // public function isCurrentRoute($name, $adminCode = null);
 
     public function setSecurityHandler(SecurityHandlerInterface $securityHandler);
 
@@ -335,7 +320,7 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
     /**
      * Returns the uniqid.
      *
-     * @return int
+     * @return string
      */
     public function getUniqid();
 
@@ -445,7 +430,7 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
     public function createObjectSecurity($object);
 
     /**
-     * @return AdminInterface
+     * @return AdminInterface|null
      */
     public function getParent();
 
@@ -461,9 +446,11 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
     /**
      * Returns template.
      *
+     * @deprecated since 3.35. To be removed in 4.0. Use TemplateRegistry services instead
+     *
      * @param string $name
      *
-     * @return null|string
+     * @return string|null
      */
     public function getTemplate($name);
 
@@ -640,9 +627,7 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
     public function getTranslationLabel($label, $context = '', $type = '');
 
     /**
-     * @param $object
-     *
-     * @return Metadata
+     * @return MetadataInterface
      */
     public function getObjectMetadata($object);
 
@@ -662,6 +647,23 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
      * @return string
      */
     public function getListMode();
+
+    /*
+     * Check the current request is given route or not.
+     *
+     * TODO: uncomment this method before releasing 4.0
+     *
+     * ```
+     * $this->isCurrentRoute('create'); // is create page?
+     * $this->isCurrentRoute('edit', 'some.admin.code'); // is some.admin.code admin's edit page?
+     * ```
+     *
+     * @param string $name
+     * @param string $adminCode
+     *
+     * @return bool
+     */
+    // public function isCurrentRoute($name, $adminCode = null);
 
     /*
      * Configure buttons for an action
@@ -701,3 +703,5 @@ interface AdminInterface extends AccessRegistryInterface, FieldDescriptionRegist
 //    NEXT_MAJOR: uncomment this method in 4.0
     // public function isDefaultFilter($name);
 }
+
+class_exists(\Sonata\Form\Validator\ErrorElement::class);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -83,7 +85,12 @@ class RouteCollection
         $routeName = $this->baseRouteName.'_'.$name;
 
         if (!isset($defaults['_controller'])) {
-            $defaults['_controller'] = $this->baseControllerName.':'.$this->actionify($code);
+            $actionJoiner = false === strpos($this->baseControllerName, '\\') ? ':' : '::';
+            if (':' !== $actionJoiner && false !== strpos($this->baseControllerName, ':')) {
+                $actionJoiner = ':';
+            }
+
+            $defaults['_controller'] = $this->baseControllerName.$actionJoiner.$this->actionify($code);
         }
 
         if (!isset($defaults['_sonata_admin'])) {
@@ -145,7 +152,7 @@ class RouteCollection
      */
     public function has($name)
     {
-        return array_key_exists($this->getCode($name), $this->elements);
+        return \array_key_exists($this->getCode($name), $this->elements);
     }
 
     /**
@@ -189,7 +196,7 @@ class RouteCollection
      */
     public function clearExcept($routeList)
     {
-        if (!is_array($routeList)) {
+        if (!\is_array($routeList)) {
             $routeList = [$routeList];
         }
 
@@ -200,7 +207,7 @@ class RouteCollection
 
         $elements = $this->elements;
         foreach ($elements as $key => $element) {
-            if (!in_array($key, $routeCodeList)) {
+            if (!\in_array($key, $routeCodeList, true)) {
                 unset($this->elements[$key]);
             }
         }
@@ -274,13 +281,10 @@ class RouteCollection
         return $this->baseRoutePattern;
     }
 
-    /**
-     * @return Route
-     */
-    private function resolve($element)
+    private function resolve($element): Route
     {
-        if (is_callable($element)) {
-            return call_user_func($element);
+        if (\is_callable($element)) {
+            return \call_user_func($element);
         }
 
         return $element;

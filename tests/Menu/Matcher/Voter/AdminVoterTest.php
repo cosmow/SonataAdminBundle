@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -15,6 +17,7 @@ use Knp\Menu\ItemInterface;
 use Sonata\AdminBundle\Admin\AbstractAdmin;
 use Sonata\AdminBundle\Menu\Matcher\Voter\AdminVoter;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class AdminVoterTest extends AbstractVoterTest
 {
@@ -39,15 +42,33 @@ class AdminVoterTest extends AbstractVoterTest
     }
 
     /**
+     * @doesNotPerformAssertions
+     * @group legacy
+     */
+    public function testDeprecatedRequestSetter(): void
+    {
+        $request = new Request();
+
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+
+        $voter = new AdminVoter();
+        $voter->setRequest($request);
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function createVoter($dataVoter, $route)
     {
-        $voter = new AdminVoter();
         $request = new Request();
         $request->request->set('_sonata_admin', $dataVoter);
         $request->request->set('_route', $route);
-        $voter->setRequest($request);
+
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+
+        $voter = new AdminVoter($requestStack);
 
         return $voter;
     }
@@ -73,7 +94,7 @@ class AdminVoterTest extends AbstractVoterTest
     /**
      * {@inheritdoc}
      */
-    private function getAdmin($code, $list = false, $granted = false)
+    private function getAdmin(string $code, bool $list = false, bool $granted = false): AbstractAdmin
     {
         $admin = $this->createMock(AbstractAdmin::class);
         $admin
@@ -105,8 +126,12 @@ class AdminVoterTest extends AbstractVoterTest
     /**
      * {@inheritdoc}
      */
-    private function getChildAdmin($parentCode, $childCode, $list = false, $granted = false)
-    {
+    private function getChildAdmin(
+        string $parentCode,
+        string $childCode,
+        bool $list = false,
+        bool $granted = false
+    ): AbstractAdmin {
         $parentAdmin = $this->createMock(AbstractAdmin::class);
         $parentAdmin
             ->expects($this->any())

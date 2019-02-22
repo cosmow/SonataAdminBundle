@@ -47,7 +47,19 @@ file that was distributed with this source code.
 {% block textarea_widget %}
     {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
     {{ parent() }}
+    {{ block('sonata_help') }}
 {% endblock textarea_widget %}
+
+{% block number_widget -%}
+    {{ parent() }}
+    {{ block('sonata_help') }}
+{%- endblock number_widget %}
+
+{% block choice_widget -%}
+    {{ parent() }}
+    {{ block('sonata_help') }}
+{%- endblock choice_widget %}
+
 
 {% block money_widget -%}
     {% if money_pattern == '{{ widget }}' %}
@@ -66,6 +78,7 @@ file that was distributed with this source code.
             </div>
         {% endif %}
     {% endif %}
+    {{ block('sonata_help') }}
 {%- endblock money_widget %}
 
 {% block percent_widget %}
@@ -75,6 +88,7 @@ file that was distributed with this source code.
             {{ block('form_widget_simple') }}
             <span class="input-group-addon">%</span>
         </div>
+        {{ block('sonata_help') }}
     {% endspaceless %}
 {% endblock percent_widget %}
 
@@ -263,6 +277,9 @@ file that was distributed with this source code.
             })|raw }}
         </div>
     {% endif %}
+    {% if datepicker_use_button is not defined %}
+        {{ block('sonata_help') }}
+    {% endif %}
 {% endspaceless %}
 {% endblock date_widget %}
 
@@ -291,6 +308,7 @@ file that was distributed with this source code.
             {% endif %}
         </div>
     {% endif %}
+    {{ block('sonata_help') }}
 {% endspaceless %}
 {% endblock time_widget %}
 
@@ -320,6 +338,9 @@ file that was distributed with this source code.
                 {{ form_widget(form.time, {'row': false, 'input_wrapper_class': 'col-sm-2'}) }}
             {% endif %}
         </div>
+    {% endif %}
+    {% if datepicker_use_button is not defined %}
+        {{ block('sonata_help') }}
     {% endif %}
 {% endspaceless %}
 {% endblock datetime_widget %}
@@ -481,14 +502,20 @@ file that was distributed with this source code.
     {{ block('choice_widget') }}
     {# Taking the form name excluding ending field glue character #}
     {% set main_form_name = id|slice(0, (id|length - name|length)-1) %}
+    {% if expanded %}
+        {% set js_selector = '#' ~ main_form_name ~ '_' ~ name ~ ' input' %}
+        {% set js_event = 'ifChecked' %}
+    {% else %}
+        {% set js_selector = '#' ~ main_form_name ~ '_' ~ name %}
+        {% set js_event = 'change' %}
+    {% endif %}
     <script>
         jQuery(document).ready(function() {
-            var allFields = {{ all_fields|json_encode|raw }};
-            var map = {{ map|json_encode|raw }};
+            var allFields = {{ all_fields|json_encode|raw }},
+                map = {{ map|json_encode|raw }},
+                showMaskChoiceEl = jQuery("{{ js_selector }}");
 
-            var showMaskChoiceEl = jQuery('#{{ main_form_name }}_{{ name }}');
-
-            showMaskChoiceEl.on('change', function () {
+            showMaskChoiceEl.on("{{ js_event }}", function () {
                 choice_field_mask_show(jQuery(this).val());
             });
 
@@ -515,7 +542,12 @@ file that was distributed with this source code.
                     });
                 }
             }
-            choice_field_mask_show(showMaskChoiceEl.val());
+
+            {% if value is empty %}
+                choice_field_mask_show(showMaskChoiceEl.val());
+            {% else %}
+                choice_field_mask_show('{{ value }}');
+            {% endif %}
         });
 
     </script>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -56,7 +58,7 @@ class ShowMapper extends BaseGroupedMapper
         if ($name instanceof FieldDescriptionInterface) {
             $fieldDescription = $name;
             $fieldDescription->mergeOptions($fieldDescriptionOptions);
-        } elseif (is_string($name)) {
+        } elseif (\is_string($name)) {
             if (!$this->admin->hasShowFieldDescription($name)) {
                 $fieldDescription = $this->admin->getModelManager()->getNewFieldDescriptionInstance(
                     $this->admin->getClass(),
@@ -127,12 +129,12 @@ class ShowMapper extends BaseGroupedMapper
         unset($groups[$group]);
 
         $tabs = $this->getTabs();
-        $key = array_search($group, $tabs[$tab]['groups']);
+        $key = array_search($group, $tabs[$tab]['groups'], true);
 
         if (false !== $key) {
             unset($tabs[$tab]['groups'][$key]);
         }
-        if ($deleteEmptyTab && 0 == count($tabs[$tab]['groups'])) {
+        if ($deleteEmptyTab && 0 === \count($tabs[$tab]['groups'])) {
             unset($tabs[$tab]);
         }
 

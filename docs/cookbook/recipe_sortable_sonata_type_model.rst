@@ -1,13 +1,16 @@
 Sortable Sonata Type Model in Admin
 ===================================
 
-This is a full working example on how to implement a sortable feature in your Sonata admin form between two entities.
+This is a full working example on how to implement a sortable
+feature in your Sonata admin form between two entities.
 
 Background
 ----------
 
-The sortable function is already available inside Sonata for the ``ChoiceType``. But the ``ModelType`` (or sonata_type_model) extends from choice, so this function is already available in our form type.
-We just need some configuration to make it work.
+The sortable function is already available inside Sonata for the ``ChoiceType``.
+But the ``ModelType`` (or sonata_type_model) extends from choice, so this
+function is already available in our form type. We only need some configuration
+to make it work.
 
 The goal here is to fully configure a working example to handle the following need :
 User got some expectations, but some are more relevant than the others.
@@ -22,15 +25,15 @@ Configuration
 - you already have ``User`` and ``Expectation`` Entities classes.
 - you already have an ``UserAdmin`` and ``ExpectationAdmin`` set up.
 
-
-The recipe
+The Recipe
 ----------
 
 Part 1 : Update the data model configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first thing to do is to update the Doctrine ORM configuration and create the join entity between ``User`` and ``Expectation``.
-We are going to call this join entity ``UserHasExpectations``.
+The first thing to do is to update the Doctrine ORM configuration and
+create the join entity between ``User`` and ``Expectation``. We are
+going to call this join entity ``UserHasExpectations``.
 
 .. note::
 
@@ -42,10 +45,10 @@ So we start by updating ``UserBundle/Resources/config/doctrine/User.orm.xml`` an
 
     <one-to-many field="userHasExpectations" target-entity="UserBundle\Entity\UserHasExpectations" mapped-by="user" orphan-removal="true">
         <cascade>
-            <cascade-persist />
+            <cascade-persist/>
         </cascade>
         <order-by>
-            <order-by-field name="position" direction="ASC" />
+            <order-by-field name="position" direction="ASC"/>
         </order-by>
     </one-to-many>
 
@@ -55,7 +58,7 @@ Then update ``UserBundle/Resources/config/doctrine/Expectation.orm.xml`` and als
 
     <one-to-many field="userHasExpectations" target-entity="UserBundle\Entity\UserHasExpectations" mapped-by="expectation" orphan-removal="false">
         <cascade>
-            <cascade-persist />
+            <cascade-persist/>
         </cascade>
     </one-to-many>
 
@@ -70,7 +73,7 @@ We now need to create the join entity configuration, create the following file i
 
         <entity name="UserBundle\Entity\UserHasExpectations" table="user__expectations">
             <id name="id" type="integer">
-                <generator strategy="AUTO" />
+                <generator strategy="AUTO"/>
             </id>
             <field name="position" column="position" type="integer">
                 <options>
@@ -91,20 +94,13 @@ We now need to create the join entity configuration, create the following file i
 Part 2 : Update the data model entities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Update the ``UserBundle\Entity\User.php`` entity with the following :
-
-.. code-block:: php
-
-    // ...
+Update the ``UserBundle\Entity\User.php`` entity with the following::
 
     /**
      * @var UserHasExpectations[]
      */
     protected $userHasExpectations;
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct()
     {
         $this->userHasExpectations = new ArrayCollection;
@@ -152,13 +148,7 @@ Update the ``UserBundle\Entity\User.php`` entity with the following :
         return $this;
     }
 
-    // ...
-
-Update the ``UserBundle\Entity\Expectation.php`` entity with the following :
-
-.. code-block:: php
-
-    // ...
+Update the ``UserBundle\Entity\Expectation.php`` entity with the following::
 
     /**
      * @var UserHasExpectations[]
@@ -189,13 +179,8 @@ Update the ``UserBundle\Entity\Expectation.php`` entity with the following :
         return $this->getLabel();
     }
 
-    // ...
+Create the ``UserBundle\Entity\UserHasExpectations.php`` entity with the following::
 
-Create the ``UserBundle\Entity\UserHasExpectations.php`` entity with the following :
-
-.. code-block:: php
-
-    <?php
     namespace UserBundle\Entity;
 
     class UserHasExpectations
@@ -307,18 +292,14 @@ So we are going to start by creating this ``UserBundle\Admin\UserHasExpectations
 
 .. code-block:: php
 
-    <?php
     namespace UserBundle\Admin;
 
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Datagrid\ListMapper;
     use Sonata\AdminBundle\Form\FormMapper;
 
-    class UserHasExpectationsAdmin extends AbstractAdmin
+    final class UserHasExpectationsAdmin extends AbstractAdmin
     {
-        /**
-         * @param \Sonata\AdminBundle\Form\FormMapper $formMapper
-         */
         protected function configureFormFields(FormMapper $formMapper)
         {
             $formMapper
@@ -327,9 +308,6 @@ So we are going to start by creating this ``UserBundle\Admin\UserHasExpectations
             ;
         }
 
-        /**
-         * @param \Sonata\AdminBundle\Datagrid\ListMapper $listMapper
-         */
         protected function configureListFields(ListMapper $listMapper)
         {
             $listMapper
@@ -345,23 +323,16 @@ So we are going to start by creating this ``UserBundle\Admin\UserHasExpectations
 .. code-block:: xml
 
     <service id="user.admin.user_has_expectations" class="UserBundle\Admin\UserHasExpectationsAdmin">
-        <tag name="sonata.admin" manager_type="orm" group="UserHasExpectations" label="UserHasExpectations" />
-        <argument />
+        <tag name="sonata.admin" manager_type="orm" group="UserHasExpectations" label="UserHasExpectations"/>
+        <argument/>
         <argument>UserBundle\Entity\UserHasExpectations</argument>
-        <argument />
+        <argument/>
     </service>
 
-Now update the ``UserBundle\Admin\UserAdmin.php`` by adding the ``sonata_type_model`` field.
+Now update the ``UserBundle\Admin\UserAdmin.php`` by adding the ``sonata_type_model`` field::
 
-.. code-block:: php
-
-    /**
-     * {@inheritdoc}
-     */
     protected function configureFormFields(FormMapper $formMapper)
     {
-        // ...
-
         $formMapper
             ->add('userHasExpectations', 'sonata_type_model', [
                 'label'        => 'User\'s expectations',
@@ -373,7 +344,9 @@ Now update the ``UserBundle\Admin\UserAdmin.php`` by adding the ``sonata_type_mo
             ])
         ;
 
-        $formMapper->get('userHasExpectations')->addModelTransformer(new ExpectationDataTransformer($this->getSubject(), $this->modelManager));
+        $formMapper
+            ->get('userHasExpectations')
+            ->addModelTransformer(new ExpectationDataTransformer($this->getSubject(), $this->modelManager));
     }
 
 There is two important things that we need to show here :
@@ -383,11 +356,9 @@ There is two important things that we need to show here :
 Part 4 : Data Transformer
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The last (but not least) step is create the ``UserBundle\Form\DataTransformer\ExpectationDataTransformer.php`` to handle the conversion of ``Expectation`` to ``UserHasExpectations``.
+The last (but not least) step is create the ``UserBundle\Form\DataTransformer\ExpectationDataTransformer.php``
+to handle the conversion of ``Expectation`` to ``UserHasExpectations``::
 
-.. code-block:: php
-
-    <?php
     namespace UserBundle\Form\DataTransformer;
 
     class ExpectationDataTransformer implements Symfony\Component\Form\DataTransformerInterface
@@ -402,19 +373,12 @@ The last (but not least) step is create the ``UserBundle\Form\DataTransformer\Ex
          */
         private $modelManager;
 
-        /**
-         * @param User         $user
-         * @param ModelManager $modelManager
-         */
         public function __construct(User $user, ModelManager $modelManager)
         {
             $this->user         = $user;
             $this->modelManager = $modelManager;
         }
 
-        /**
-         * {@inheritdoc}
-         */
         public function transform($data)
         {
             if (!is_null($data)) {
@@ -431,12 +395,9 @@ The last (but not least) step is create the ``UserBundle\Form\DataTransformer\Ex
             return $data;
         }
 
-        /**
-         * {@inheritdoc}
-         */
         public function reverseTransform($expectations)
         {
-            $results  = new ArrayCollection;
+            $results  = new ArrayCollection();
             $position = 0;
 
             /** @var Expectation $expectation */
@@ -461,10 +422,9 @@ The last (but not least) step is create the ``UserBundle\Form\DataTransformer\Ex
             foreach ($userHasExpectationsToRemove as $userHasExpectations) {
                 $this->modelManager->delete($userHasExpectations, false);
             }
+
             $this->modelManager->getEntityManager()->flush();
 
             return $results;
         }
     }
-
-Hope this will work for you :)

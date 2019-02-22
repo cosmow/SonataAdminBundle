@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -12,6 +14,7 @@
 namespace Sonata\AdminBundle\Util;
 
 use Sonata\AdminBundle\Form\Type\AclMatrixType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -29,8 +32,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class AdminObjectAclManipulator
 {
-    const ACL_USERS_FORM_NAME = 'acl_users_form';
-    const ACL_ROLES_FORM_NAME = 'acl_roles_form';
+    public const ACL_USERS_FORM_NAME = 'acl_users_form';
+    public const ACL_ROLES_FORM_NAME = 'acl_roles_form';
 
     /**
      * @var FormFactoryInterface
@@ -88,7 +91,7 @@ class AdminObjectAclManipulator
     public function createAclUsersForm(AdminObjectAclData $data)
     {
         $aclValues = $data->getAclUsers();
-        $formBuilder = $this->formFactory->createNamedBuilder(self::ACL_USERS_FORM_NAME, 'form');
+        $formBuilder = $this->formFactory->createNamedBuilder(self::ACL_USERS_FORM_NAME, FormType::class);
         $form = $this->buildForm($data, $formBuilder, $aclValues);
         $data->setAclUsersForm($form);
 
@@ -103,7 +106,7 @@ class AdminObjectAclManipulator
     public function createAclRolesForm(AdminObjectAclData $data)
     {
         $aclValues = $data->getAclRoles();
-        $formBuilder = $this->formFactory->createNamedBuilder(self::ACL_ROLES_FORM_NAME, 'form');
+        $formBuilder = $this->formFactory->createNamedBuilder(self::ACL_ROLES_FORM_NAME, FormType::class);
         $form = $this->buildForm($data, $formBuilder, $aclValues);
         $data->setAclRolesForm($form);
 
@@ -162,10 +165,10 @@ class AdminObjectAclManipulator
         foreach ($aclValues as $aclValue) {
             foreach ($matrices as $key => $matrix) {
                 if ($aclValue instanceof UserInterface) {
-                    if (array_key_exists('user', $matrix) && $aclValue->getUsername() === $matrix['user']) {
+                    if (\array_key_exists('user', $matrix) && $aclValue->getUsername() === $matrix['user']) {
                         $matrices[$key]['acl_value'] = $aclValue;
                     }
-                } elseif (array_key_exists('role', $matrix) && $aclValue === $matrix['role']) {
+                } elseif (\array_key_exists('role', $matrix) && $aclValue === $matrix['role']) {
                     $matrices[$key]['acl_value'] = $aclValue;
                 }
             }
@@ -251,7 +254,7 @@ class AdminObjectAclManipulator
                 if (
                     self::ACL_ROLES_FORM_NAME === $formBuilder->getName()
                     && isset($securityInformation[$aclValue])
-                    && false !== array_search($permission, $securityInformation[$aclValue])
+                    && false !== array_search($permission, $securityInformation[$aclValue], true)
                 ) {
                     $attr['disabled'] = 'disabled';
                 }
@@ -259,7 +262,7 @@ class AdminObjectAclManipulator
                 $permissions[$permission] = [
                     'required' => false,
                     'data' => $checked,
-                    'disabled' => array_key_exists('disabled', $attr),
+                    'disabled' => \array_key_exists('disabled', $attr),
                     'attr' => $attr,
                 ];
             }

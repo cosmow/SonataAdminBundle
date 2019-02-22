@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -50,7 +52,7 @@ class GenerateAdminCommandTest extends TestCase
      */
     private $command;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         // create temp dir
         $tempfile = tempnam(sys_get_temp_dir(), 'sonata_admin');
@@ -86,7 +88,7 @@ class GenerateAdminCommandTest extends TestCase
         $this->application->add($this->command);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         if ($this->tempDirectory) {
             if (file_exists($this->tempDirectory.'/Controller/FooAdminController.php')) {
@@ -123,7 +125,7 @@ class GenerateAdminCommandTest extends TestCase
         }
     }
 
-    public function testExecute()
+    public function testExecute(): void
     {
         $this->command->setContainer($this->container);
         $this->container->set('sonata.admin.manager.foo', $this->createMock(ModelManagerInterface::class));
@@ -141,9 +143,9 @@ class GenerateAdminCommandTest extends TestCase
         ], ['interactive' => false]);
 
         $expectedOutput = '';
-        $expectedOutput .= sprintf('%3$sThe admin class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Admin\FooAdmin" has been generated under the file "%1$s%2$sAdmin%2$sFooAdmin.php".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
-        $expectedOutput .= sprintf('%3$sThe controller class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Controller\FooAdminController" has been generated under the file "%1$s%2$sController%2$sFooAdminController.php".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
-        $expectedOutput .= sprintf('%3$sThe service "acme_demo_admin.admin.foo" has been appended to the file "%1$s%2$sResources%2$sconfig%2$sadmin.yml".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe admin class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Admin\FooAdmin" has been generated under the file "%1$s%2$sAdmin%2$sFooAdmin.php".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe controller class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Controller\FooAdminController" has been generated under the file "%1$s%2$sController%2$sFooAdminController.php".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe service "acme_demo_admin.admin.foo" has been appended to the file "%1$s%2$sResources%2$sconfig%2$sadmin.yml".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
 
         $this->assertSame($expectedOutput, $commandTester->getDisplay());
 
@@ -172,7 +174,7 @@ class GenerateAdminCommandTest extends TestCase
         $this->assertContains('            - { name: sonata.admin, manager_type: foo, group: admin, label: Foo }', $configServiceContent);
     }
 
-    public function testExecuteWithExceptionNoModelManagers()
+    public function testExecuteWithExceptionNoModelManagers(): void
     {
         $this->expectException(\RuntimeException::class, 'There are no model managers registered.');
 
@@ -194,7 +196,7 @@ class GenerateAdminCommandTest extends TestCase
     /**
      * @dataProvider getExecuteInteractiveTests
      */
-    public function testExecuteInteractive($modelEntity)
+    public function testExecuteInteractive($modelEntity): void
     {
         $this->command->setContainer($this->container);
         $this->container->set('sonata.admin.manager.foo', $this->createMock(ModelManagerInterface::class));
@@ -254,9 +256,9 @@ class GenerateAdminCommandTest extends TestCase
             ]);
 
         $expectedOutput = PHP_EOL.str_pad('', 41, ' ').PHP_EOL.'  Welcome to the Sonata admin generator  '.PHP_EOL.str_pad('', 41, ' ').PHP_EOL.PHP_EOL;
-        $expectedOutput .= sprintf('%3$sThe admin class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Admin\FooAdmin" has been generated under the file "%1$s%2$sAdmin%2$sFooAdmin.php".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
-        $expectedOutput .= sprintf('%3$sThe controller class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Controller\FooAdminController" has been generated under the file "%1$s%2$sController%2$sFooAdminController.php".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
-        $expectedOutput .= sprintf('%3$sThe service "acme_demo_admin.admin.foo" has been appended to the file "%1$s%2$sResources%2$sconfig%2$sadmin.yml".%3$s', $this->tempDirectory, DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe admin class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Admin\FooAdmin" has been generated under the file "%1$s%2$sAdmin%2$sFooAdmin.php".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe controller class "Sonata\AdminBundle\Tests\Fixtures\Bundle\Controller\FooAdminController" has been generated under the file "%1$s%2$sController%2$sFooAdminController.php".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
+        $expectedOutput .= sprintf('%3$sThe service "acme_demo_admin.admin.foo" has been appended to the file "%1$s%2$sResources%2$sconfig%2$sadmin.yml".%3$s', $this->tempDirectory, \DIRECTORY_SEPARATOR, PHP_EOL);
 
         $this->assertSame($expectedOutput, str_replace("\n", PHP_EOL, str_replace(PHP_EOL, "\n", $commandTester->getDisplay())));
 
@@ -296,7 +298,7 @@ class GenerateAdminCommandTest extends TestCase
     /**
      * @dataProvider getValidateManagerTypeTests
      */
-    public function testValidateManagerType($expected, $managerType)
+    public function testValidateManagerType($expected, $managerType): void
     {
         $this->command->setContainer($this->container);
         $this->container->set('sonata.admin.manager.foo', $this->createMock(ModelManagerInterface::class));
@@ -313,7 +315,7 @@ class GenerateAdminCommandTest extends TestCase
         ];
     }
 
-    public function testValidateManagerTypeWithException1()
+    public function testValidateManagerTypeWithException1(): void
     {
         $this->command->setContainer($this->container);
         $this->expectException(\InvalidArgumentException::class);
@@ -321,7 +323,7 @@ class GenerateAdminCommandTest extends TestCase
         $this->command->validateManagerType('foo');
     }
 
-    public function testValidateManagerTypeWithException2()
+    public function testValidateManagerTypeWithException2(): void
     {
         $this->command->setContainer($this->container);
         $this->container->set('sonata.admin.manager.foo', $this->createMock(ModelManagerInterface::class));
@@ -331,13 +333,13 @@ class GenerateAdminCommandTest extends TestCase
         $this->command->validateManagerType('baz');
     }
 
-    public function testValidateManagerTypeWithException3()
+    public function testValidateManagerTypeWithException3(): void
     {
         $this->expectException(\InvalidArgumentException::class, 'Invalid manager type "baz". Available manager types are "".');
         $this->command->validateManagerType('baz');
     }
 
-    public function testAnswerUpdateServicesWithNo()
+    public function testAnswerUpdateServicesWithNo(): void
     {
         $this->container->set('sonata.admin.manager.foo', $this->createMock(ModelManagerInterface::class));
 

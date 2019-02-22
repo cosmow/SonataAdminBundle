@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -40,7 +42,7 @@ class ModelToIdTransformer implements DataTransformerInterface
 
     public function reverseTransform($newId)
     {
-        if (empty($newId) && !in_array($newId, ['0', 0], true)) {
+        if (empty($newId) && !\in_array($newId, ['0', 0], true)) {
             return;
         }
 

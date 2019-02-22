@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -48,7 +50,7 @@ class MergeCollectionListener implements EventSubscriberInterface
 
         if (!$collection) {
             $collection = $data;
-        } elseif (0 === count($data)) {
+        } elseif (0 === \count($data)) {
             $this->modelManager->collectionClear($collection);
         } else {
             // merge $data into $collection

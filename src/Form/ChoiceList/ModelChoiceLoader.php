@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -13,7 +15,7 @@ namespace Sonata\AdminBundle\Form\ChoiceList;
 
 use Doctrine\Common\Util\ClassUtils;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
-use Sonata\CoreBundle\Model\Adapter\AdapterInterface;
+use Sonata\Doctrine\Adapter\AdapterInterface;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
 use Symfony\Component\Form\Exception\RuntimeException;
@@ -91,7 +93,7 @@ class ModelChoiceLoader implements ChoiceLoaderInterface
         if (!$this->choiceList) {
             if ($this->query) {
                 $entities = $this->modelManager->executeQuery($this->query);
-            } elseif (is_array($this->choices) && count($this->choices) > 0) {
+            } elseif (\is_array($this->choices) && \count($this->choices) > 0) {
                 $entities = $this->choices;
             } else {
                 $entities = $this->modelManager->findBy($this->class);
@@ -113,7 +115,7 @@ class ModelChoiceLoader implements ChoiceLoaderInterface
 
                 $id = implode(AdapterInterface::ID_SEPARATOR, $this->getIdentifierValues($entity));
 
-                if (!array_key_exists($valueObject, $choices)) {
+                if (!\array_key_exists($valueObject, $choices)) {
                     $choices[$valueObject] = [];
                 }
 
@@ -122,7 +124,7 @@ class ModelChoiceLoader implements ChoiceLoaderInterface
 
             $finalChoices = [];
             foreach ($choices as $valueObject => $idx) {
-                if (count($idx) > 1) { // avoid issue with identical values ...
+                if (\count($idx) > 1) { // avoid issue with identical values ...
                     foreach ($idx as $id) {
                         $finalChoices[sprintf('%s (id: %s)', $valueObject, $id)] = $id;
                     }
@@ -149,10 +151,8 @@ class ModelChoiceLoader implements ChoiceLoaderInterface
 
     /**
      * @param object $entity
-     *
-     * @return array
      */
-    private function getIdentifierValues($entity)
+    private function getIdentifierValues($entity): array
     {
         try {
             return $this->modelManager->getIdentifierValues($entity);

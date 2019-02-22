@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -270,7 +272,7 @@ class AdminObjectAclData
 
         if (!$this->isOwner()) {
             foreach (self::$ownerPermissions as $permission) {
-                $key = array_search($permission, $permissions);
+                $key = array_search($permission, $permissions, true);
                 if (false !== $key) {
                     unset($permissions[$key]);
                 }
@@ -278,6 +280,11 @@ class AdminObjectAclData
         }
 
         return $permissions;
+    }
+
+    public function getOwnerPermissions()
+    {
+        return self::$ownerPermissions;
     }
 
     /**

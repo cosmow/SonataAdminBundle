@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -43,7 +45,7 @@ class ModelAutocompleteType extends AbstractType
             'disabled',
             $options['disabled']
             // NEXT_MAJOR: Remove this when bumping Symfony constraint to 2.8+
-            || (array_key_exists('read_only', $options) && $options['read_only'])
+            || (\array_key_exists('read_only', $options) && $options['read_only'])
         );
         $builder->setAttribute('to_string_callback', $options['to_string_callback']);
         $builder->setAttribute('target_admin_access_action', $options['target_admin_access_action']);
@@ -84,6 +86,9 @@ class ModelAutocompleteType extends AbstractType
             // add button
             'btn_add',
             'btn_catalogue',
+            // allow HTML
+            'safe_label',
+            'property',
         ] as $passthroughOption) {
             $view->vars[$passthroughOption] = $options[$passthroughOption];
         }
@@ -147,7 +152,10 @@ class ModelAutocompleteType extends AbstractType
 
             'dropdown_auto_width' => false,
 
-            'template' => 'SonataAdminBundle:Form/Type:sonata_type_model_autocomplete.html.twig',
+            // allow HTML
+            'safe_label' => false,
+
+            'template' => '@SonataAdmin/Form/Type/sonata_type_model_autocomplete.html.twig',
         ]);
 
         $resolver->setRequired(['property']);

@@ -12,6 +12,8 @@
 var Admin = {
 
     collectionCounters: [],
+    config: null,
+    translations: null,
 
     /**
      * This function must be called when an ajax call is done, to ensure
@@ -20,7 +22,9 @@ var Admin = {
      * @param subject
      */
     shared_setup: function(subject) {
+        Admin.read_config();
         Admin.log("[core|shared_setup] Register services on", subject);
+        Admin.setup_ie10_polyfill();
         Admin.set_object_field_value(subject);
         Admin.add_filters(subject);
         Admin.setup_select2(subject);
@@ -33,8 +37,37 @@ var Admin = {
         Admin.setup_collection_counter(subject);
         Admin.setup_sticky_elements(subject);
         Admin.setup_readmore_elements(subject);
+        Admin.setup_form_submit(subject);
 
 //        Admin.setup_list_modal(subject);
+    },
+    setup_ie10_polyfill: function() {
+      // http://getbootstrap.com/getting-started/#support-ie10-width
+      if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
+          var msViewportStyle = document.createElement('style');
+          msViewportStyle.appendChild(document.createTextNode('@-ms-viewport{width:auto!important}'));
+          document.querySelector('head').appendChild(msViewportStyle);
+      }
+    },
+    read_config: function() {
+      var data = $('[data-sonata-admin]').data('sonata-admin');
+
+      this.config = data.config;
+      this.translations = data.translations;
+    },
+    get_config: function(key) {
+        if (this.config == null) {
+            this.read_config();
+        }
+
+        return this.config[key];
+    },
+    get_translations: function(key) {
+        if (this.translations == null) {
+          this.read_config();
+        }
+
+        return this.translations[key];
     },
     setup_list_modal: function(modal) {
         Admin.log('[core|setup_list_modal] configure modal on', modal);
@@ -60,7 +93,7 @@ var Admin = {
         jQuery(modal).trigger('sonata-admin-setup-list-modal');
     },
     setup_select2: function(subject) {
-        if (window.SONATA_CONFIG && window.SONATA_CONFIG.USE_SELECT2) {
+        if (Admin.get_config('USE_SELECT2')) {
             Admin.log('[core|setup_select2] configure Select2 on', subject);
 
             jQuery('select:not([data-sonata-select2="false"])', subject).each(function() {
@@ -97,13 +130,19 @@ var Admin = {
         }
     },
     setup_icheck: function(subject) {
-        if (window.SONATA_CONFIG && window.SONATA_CONFIG.USE_ICHECK) {
+        if (Admin.get_config('USE_ICHECK')) {
             Admin.log('[core|setup_icheck] configure iCheck on', subject);
 
-            jQuery("input[type='checkbox']:not('label.btn>input'), input[type='radio']:not('label.btn>input')", subject).iCheck({
+            jQuery('input[type="checkbox"]:not(label.btn > input, [data-sonata-icheck="false"]), input[type="radio"]:not(label.btn > input, [data-sonata-icheck="false"])', subject)
+              .iCheck({
                 checkboxClass: 'icheckbox_square-blue',
                 radioClass: 'iradio_square-blue'
-            });
+              })
+              // See https://github.com/fronteed/iCheck/issues/244
+              .on('ifToggled', function (e) {
+                  $(e.target).trigger('change');
+              });
+
         }
     },
     /**
@@ -118,7 +157,7 @@ var Admin = {
         Admin.log('[core|setup_checkbox_range_selection] configure checkbox range selection on', subject);
 
         var previousIndex,
-            useICheck = window.SONATA_CONFIG && window.SONATA_CONFIG.USE_ICHECK
+            useICheck = Admin.get_config('USE_ICHECK')
         ;
 
         // When a checkbox or an iCheck helper is clicked
@@ -181,6 +220,10 @@ var Admin = {
      * @param mixed
      */
     log: function() {
+        if (!Admin.get_config('DEBUG')) {
+          return;
+        }
+
         var msg = '[Sonata.Admin] ' + Array.prototype.join.call(arguments,', ');
         if (window.console && window.console.log) {
             window.console.log(msg);
@@ -206,6 +249,13 @@ var Admin = {
 
     add_filters: function(subject) {
         Admin.log('[core|add_filters] configure filters on', subject);
+
+        function updateCounter() {
+            var count = jQuery('a.sonata-toggle-filter .fa-check-square-o', subject).length;
+
+            jQuery('.sonata-filter-count', subject).text(count);
+        }
+
         jQuery('a.sonata-toggle-filter', subject).on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -229,6 +279,7 @@ var Admin = {
 
             if (jQuery(target).is(":visible")) {
                 filterToggler
+                    .filter(':not(.fa-minus-circle)')
                     .removeClass('fa-check-square-o')
                     .addClass('fa-square-o')
                 ;
@@ -237,6 +288,7 @@ var Admin = {
 
             } else {
                 filterToggler
+                    .filter(':not(.fa-minus-circle)')
                     .removeClass('fa-square-o')
                     .addClass('fa-check-square-o')
                 ;
@@ -249,6 +301,8 @@ var Admin = {
             } else {
                 jQuery(filters_container).slideUp();
             }
+
+            updateCounter();
         });
 
         jQuery('.sonata-filter-form', subject).on('submit', function () {
@@ -263,6 +317,8 @@ var Admin = {
         jQuery('[data-toggle="advanced-filter"]', subject).click(function() {
             jQuery('.advanced-filter').toggle();
         });
+
+        updateCounter();
     },
 
     /**
@@ -524,7 +580,7 @@ var Admin = {
     },
 
     setup_sticky_elements: function(subject) {
-        if (window.SONATA_CONFIG && window.SONATA_CONFIG.USE_STICKYFORMS) {
+        if (Admin.get_config('USE_STICKYFORMS')) {
             Admin.log('[core|setup_sticky_elements] setup sticky elements on', subject);
 
             var topNavbar = jQuery(subject).find('.navbar-static-top');
@@ -661,9 +717,52 @@ var Admin = {
         });
     },
     handle_top_navbar_height: function() {
-        jQuery('.content-wrapper').css('padding-top', jQuery('.navbar-static-top').outerHeight());
+        jQuery('body.fixed .content-wrapper').css('padding-top', jQuery('.navbar-static-top').outerHeight());
+    },
+    setup_form_submit: function(subject) {
+        Admin.log('[core|setup_form_submit] setup form submit on', subject);
+
+        jQuery(subject).find('form').on('submit', function() {
+            var form = jQuery(this);
+
+            // this allows to submit forms and know which button was clicked
+            setTimeout(function() {
+                form.find('button').prop('disabled', true);
+            }, 1);
+        });
+    },
+    /**
+     * Remember open tab after refreshing page.
+     */
+    setup_view_tabs_changer: function () {
+        jQuery('.changer-tab').on('click', function () {
+            var tab = jQuery(this).attr('aria-controls'),
+                search = location.search.substring(1);
+
+            /* Get query string parameters from URL */
+            var parameters = decodeURIComponent(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"'),
+                jsonURL = '{}';
+
+            /* If the parameters exist and their length is greater than 0, we put them in json */
+            if (parameters.length) {
+                jsonURL = '{"' + parameters + '"}';
+            }
+
+            var hashes = JSON.parse(jsonURL);
+
+            /* Replace tab parameter */
+            hashes._tab = tab;
+
+            /* Setting new URL */
+            var newurl = window.location.origin + window.location.pathname + '?' + jQuery.param(hashes, true);
+            window.history.pushState({
+                path: newurl
+            }, '', newurl);
+        });
     }
 };
+
+window.Admin = Admin;
 
 jQuery(document).ready(function() {
     Admin.handle_top_navbar_height();
@@ -675,12 +774,13 @@ jQuery(window).resize(function() {
 
 jQuery(document).ready(function() {
     jQuery('html').removeClass('no-js');
-    if (window.SONATA_CONFIG && window.SONATA_CONFIG.CONFIRM_EXIT) {
+    if (Admin.get_config('CONFIRM_EXIT')) {
         jQuery('.sonata-ba-form form').each(function () { jQuery(this).confirmExit(); });
     }
 
     Admin.setup_per_page_switcher(document);
     Admin.setup_collection_buttons(document);
+    Admin.setup_view_tabs_changer();
     Admin.shared_setup(document);
 });
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -12,6 +14,8 @@
 namespace Sonata\AdminBundle\Block;
 
 use Sonata\AdminBundle\Admin\Pool;
+use Sonata\AdminBundle\Templating\TemplateRegistry;
+use Sonata\AdminBundle\Templating\TemplateRegistryInterface;
 use Sonata\BlockBundle\Block\BlockContextInterface;
 use Sonata\BlockBundle\Block\Service\AbstractBlockService;
 use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
@@ -23,16 +27,29 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class AdminListBlockService extends AbstractBlockService
 {
+    /**
+     * @var Pool
+     */
     protected $pool;
+
+    /**
+     * @var TemplateRegistryInterface
+     */
+    private $templateRegistry;
 
     /**
      * @param string $name
      */
-    public function __construct($name, EngineInterface $templating, Pool $pool)
-    {
+    public function __construct(
+        $name,
+        EngineInterface $templating,
+        Pool $pool,
+        TemplateRegistryInterface $templateRegistry = null
+    ) {
         parent::__construct($name, $templating);
 
         $this->pool = $pool;
+        $this->templateRegistry = $templateRegistry ?: new TemplateRegistry();
     }
 
     public function execute(BlockContextInterface $blockContext, Response $response = null)
@@ -43,12 +60,12 @@ class AdminListBlockService extends AbstractBlockService
 
         $visibleGroups = [];
         foreach ($dashboardGroups as $name => $dashboardGroup) {
-            if (!$settings['groups'] || in_array($name, $settings['groups'])) {
+            if (!$settings['groups'] || \in_array($name, $settings['groups'], true)) {
                 $visibleGroups[] = $dashboardGroup;
             }
         }
 
-        return $this->renderPrivateResponse($this->pool->getTemplate('list_block'), [
+        return $this->renderPrivateResponse($this->templateRegistry->getTemplate('list_block'), [
             'block' => $blockContext->getBlock(),
             'settings' => $settings,
             'admin_pool' => $this->pool,

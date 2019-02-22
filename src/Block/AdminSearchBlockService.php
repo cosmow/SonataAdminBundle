@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -67,6 +69,12 @@ class AdminSearchBlockService extends AbstractBlockService
             $blockContext->getSetting('page'),
             $blockContext->getSetting('per_page')
         );
+
+        if (false === $pager) {
+            $response = $response ?: new Response();
+
+            return $response->setContent('')->setStatusCode(204);
+        }
 
         return $this->renderPrivateResponse($admin->getTemplate('search_result_block'), [
             'block' => $blockContext->getBlock(),

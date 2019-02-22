@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -56,8 +58,8 @@ class SimplePager extends Pager
 
     public function getNbResults()
     {
-        $n = ceil(($this->getLastPage() - 1) * $this->getMaxPerPage());
-        if ($this->getLastPage() == $this->getPage()) {
+        $n = ($this->getLastPage() - 1) * $this->getMaxPerPage();
+        if ($this->getLastPage() === $this->getPage()) {
             return $n + $this->thresholdCount;
         }
 
@@ -71,14 +73,14 @@ class SimplePager extends Pager
         }
 
         $this->results = $this->getQuery()->execute([], $hydrationMode);
-        $this->thresholdCount = count($this->results);
-        if (count($this->results) > $this->getMaxPerPage()) {
+        $this->thresholdCount = \count($this->results);
+        if (\count($this->results) > $this->getMaxPerPage()) {
             $this->haveToPaginate = true;
 
             if ($this->results instanceof ArrayCollection) {
                 $this->results = new ArrayCollection($this->results->slice(0, $this->getMaxPerPage()));
             } else {
-                $this->results = new ArrayCollection(array_slice($this->results, 0, $this->getMaxPerPage()));
+                $this->results = new ArrayCollection(\array_slice($this->results, 0, $this->getMaxPerPage()));
             }
         } else {
             $this->haveToPaginate = false;
@@ -104,7 +106,7 @@ class SimplePager extends Pager
         }
         $this->resetIterator();
 
-        if (0 == $this->getPage() || 0 == $this->getMaxPerPage()) {
+        if (0 === $this->getPage() || 0 === $this->getMaxPerPage()) {
             $this->setLastPage(0);
             $this->getQuery()->setFirstResult(0);
             $this->getQuery()->setMaxResults(0);
@@ -119,7 +121,7 @@ class SimplePager extends Pager
             $this->initializeIterator();
 
             $t = (int) ceil($this->thresholdCount / $this->getMaxPerPage()) + $this->getPage() - 1;
-            $this->setLastPage($t);
+            $this->setLastPage(max(1, $t));
         }
     }
 

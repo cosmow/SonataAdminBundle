@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -48,13 +50,13 @@ class LegacyModelsToArrayTransformer implements DataTransformerInterface
 
         $array = [];
 
-        if (count($this->choiceList->getIdentifier()) > 1) {
+        if (\count($this->choiceList->getIdentifier()) > 1) {
             // load all choices
             $availableEntities = $this->choiceList->getEntities();
 
             foreach ($collection as $entity) {
                 // identify choices by their collection key
-                $key = array_search($entity, $availableEntities);
+                $key = array_search($entity, $availableEntities, true);
                 $array[] = $key;
             }
         } else {
@@ -80,7 +82,7 @@ class LegacyModelsToArrayTransformer implements DataTransformerInterface
             return $collection;
         }
 
-        if (!is_array($keys)) {
+        if (!\is_array($keys)) {
             throw new UnexpectedTypeException($keys, 'array');
         }
 
@@ -95,7 +97,7 @@ class LegacyModelsToArrayTransformer implements DataTransformerInterface
             }
         }
 
-        if (count($notFound) > 0) {
+        if (\count($notFound) > 0) {
             throw new TransformationFailedException(sprintf('The entities with keys "%s" could not be found', implode('", "', $notFound)));
         }
 

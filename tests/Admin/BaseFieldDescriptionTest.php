@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -22,7 +24,7 @@ use Sonata\AdminBundle\Tests\Fixtures\Entity\FooCall;
 
 class BaseFieldDescriptionTest extends TestCase
 {
-    public function testSetName()
+    public function testSetName(): void
     {
         $description = new FieldDescription();
         $description->setName('foo');
@@ -31,7 +33,7 @@ class BaseFieldDescriptionTest extends TestCase
         $this->assertSame('foo', $description->getName());
     }
 
-    public function testOptions()
+    public function testOptions(): void
     {
         $description = new FieldDescription();
         $description->setOption('foo', 'bar');
@@ -79,7 +81,7 @@ class BaseFieldDescriptionTest extends TestCase
         $this->assertTrue($description->isSortable());
     }
 
-    public function testAdmin()
+    public function testAdmin(): void
     {
         $description = new FieldDescription();
 
@@ -100,7 +102,7 @@ class BaseFieldDescriptionTest extends TestCase
         $this->isInstanceOf(AdminInterface::class, $description->getParent());
     }
 
-    public function testGetValue()
+    public function testGetValue(): void
     {
         $description = new FieldDescription();
         $description->setOption('code', 'getFoo');
@@ -157,9 +159,21 @@ class BaseFieldDescriptionTest extends TestCase
             $mock3->expects($this->once())->method($method)->will($this->returnValue(42));
             $this->assertSame(42, $description3->getFieldValue($mock3, '_fake'));
         }
+
+        $mock4 = $this->getMockBuilder('MockedTestObject')
+            ->setMethods(['myMethod'])
+            ->getMock();
+        $mock4->expects($this->once())
+            ->method('myMethod')
+            ->will($this->returnValue('myMethodValue'));
+
+        $description4 = new FieldDescription();
+        $description4->setOption('code', 'myMethod');
+
+        $this->assertSame($description4->getFieldValue($mock4, null), 'myMethodValue');
     }
 
-    public function testGetValueNoValueException()
+    public function testGetValueNoValueException(): void
     {
         $this->expectException(\Sonata\AdminBundle\Exception\NoValueException::class);
 
@@ -171,7 +185,10 @@ class BaseFieldDescriptionTest extends TestCase
         $description->getFieldValue($mock, 'fake');
     }
 
-    public function testGetVirtualValue()
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testGetVirtualValue(): void
     {
         $description = new FieldDescription();
         $mock = $this->getMockBuilder('stdClass')
@@ -182,7 +199,7 @@ class BaseFieldDescriptionTest extends TestCase
         $description->getFieldValue($mock, 'fake');
     }
 
-    public function testExceptionOnNonArrayOption()
+    public function testExceptionOnNonArrayOption(): void
     {
         $this->expectException(\RuntimeException::class);
 
@@ -191,7 +208,7 @@ class BaseFieldDescriptionTest extends TestCase
         $description->mergeOption('bar', ['exception']);
     }
 
-    public function testGetTranslationDomain()
+    public function testGetTranslationDomain(): void
     {
         $description = new FieldDescription();
 
@@ -213,20 +230,43 @@ class BaseFieldDescriptionTest extends TestCase
     /**
      * @group legacy
      */
-    public function testCamelize()
+    public function testCamelize(): void
     {
         $this->assertSame('FooBar', BaseFieldDescription::camelize('foo_bar'));
         $this->assertSame('FooBar', BaseFieldDescription::camelize('foo bar'));
         $this->assertSame('FOoBar', BaseFieldDescription::camelize('fOo bar'));
     }
 
-    public function testGetFieldValue()
+    public function testGetInaccessibleValue(): void
+    {
+        $quux = 'quuX';
+        $foo = new Foo();
+        $foo->setQuux($quux);
+        $ro = new \ReflectionObject($foo);
+        $rm = $ro->getMethod('getQuux');
+        $rm->setAccessible(true);
+        $this->assertSame($quux, $rm->invokeArgs($foo, []));
+
+        $description = new FieldDescription();
+
+        $this->expectException(NoValueException::class);
+        $description->getFieldValue($foo, 'quux');
+    }
+
+    public function testGetFieldValue(): void
     {
         $foo = new Foo();
         $foo->setBar('Bar');
 
         $description = new FieldDescription();
         $this->assertSame('Bar', $description->getFieldValue($foo, 'bar'));
+        $foo->setBar('baR');
+        $this->assertSame('baR', $description->getFieldValue($foo, 'bar'));
+
+        $foo->qux = 'Qux';
+        $this->assertSame('Qux', $description->getFieldValue($foo, 'qux'));
+        $foo->qux = 'quX';
+        $this->assertSame('quX', $description->getFieldValue($foo, 'qux'));
 
         $foo = new FooBoolean();
         $foo->setBar(true);
@@ -240,7 +280,7 @@ class BaseFieldDescriptionTest extends TestCase
         $description->getFieldValue($foo, 'inexistantMethod');
     }
 
-    public function testGetFieldValueWithCodeOption()
+    public function testGetFieldValueWithCodeOption(): void
     {
         $foo = new Foo();
         $foo->setBaz('Baz');
@@ -255,7 +295,7 @@ class BaseFieldDescriptionTest extends TestCase
         $description->getFieldValue($foo, 'inexistantMethod');
     }
 
-    public function testGetFieldValueMagicCall()
+    public function testGetFieldValueMagicCall(): void
     {
         $parameters = ['foo', 'bar'];
         $foo = new FooCall();
@@ -263,5 +303,15 @@ class BaseFieldDescriptionTest extends TestCase
         $description = new FieldDescription();
         $description->setOption('parameters', $parameters);
         $this->assertSame(['inexistantMethod', $parameters], $description->getFieldValue($foo, 'inexistantMethod'));
+
+        // repeating to cover retrieving cached getter
+        $this->assertSame(['inexistantMethod', $parameters], $description->getFieldValue($foo, 'inexistantMethod'));
+    }
+
+    public function testGetFieldValueWithNullObject(): void
+    {
+        $foo = null;
+        $description = new FieldDescription();
+        $this->assertNull($description->getFieldValue($foo, 'bar'));
     }
 }

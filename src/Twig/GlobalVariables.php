@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -34,26 +36,35 @@ class GlobalVariables
     protected $adminPool;
 
     /**
+     * @var string|null
+     */
+    private $mosaicBackground;
+
+    /**
      * @param ContainerInterface|Pool $adminPool
      */
-    public function __construct($adminPool)
+    public function __construct($adminPool, ?string $mosaicBackground = null)
     {
+        $this->mosaicBackground = $mosaicBackground;
+
         // NEXT_MAJOR : remove this block and set adminPool from parameter.
         if ($adminPool instanceof ContainerInterface) {
             @trigger_error(
-                'Using an instance of Symfony\Component\DependencyInjection\ContainerInterface is deprecated since 
+                'Using an instance of Symfony\Component\DependencyInjection\ContainerInterface is deprecated since
                 version 3.5 and will be removed in 4.0. Use Sonata\AdminBundle\Admin\Pool instead.',
                 E_USER_DEPRECATED
             );
 
-            $this->adminPool = $adminPool->get('sonata.admin.pool');
-        } elseif ($adminPool instanceof Pool) {
-            $this->adminPool = $adminPool;
-        } else {
-            throw new \InvalidArgumentException(
-                '$adminPool should be an instance of Sonata\AdminBundle\Admin\Pool'
-            );
+            $adminPool = $adminPool->get('sonata.admin.pool');
         }
+        if ($adminPool instanceof Pool) {
+            $this->adminPool = $adminPool;
+
+            return;
+        }
+        throw new \InvalidArgumentException(
+            '$adminPool should be an instance of Sonata\AdminBundle\Admin\Pool'
+        );
     }
 
     /**
@@ -95,13 +106,12 @@ class GlobalVariables
         return $this->getAdminPool()->getAdminByAdminCode($code)->generateObjectUrl($action, $object, $parameters, $absolute);
     }
 
-    /**
-     * @param $code
-     * @param $action
-     *
-     * @return array
-     */
-    private function getCodeAction($code, $action)
+    public function getMosaicBackground(): ?string
+    {
+        return $this->mosaicBackground;
+    }
+
+    private function getCodeAction($code, $action): array
     {
         if ($pipe = strpos($code, '|')) {
             // convert code=sonata.page.admin.page|sonata.page.admin.snapshot, action=list

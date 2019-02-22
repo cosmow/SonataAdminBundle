@@ -4,17 +4,19 @@ Form Help Messages and Descriptions
 Help Messages
 -------------
 
-Help messages are short notes that are rendered together with form fields. They are generally used to show additional information so the user can complete the form element faster and more accurately. The text is not escaped, so HTML can be used.
+Help messages are short notes that are rendered together with form fields.
+They are generally used to show additional information so the user can complete
+the form element faster and more accurately. The text is not escaped,
+so HTML can be used.
 
 Example
 ^^^^^^^
 
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/PostAdmin.php
+    // src/Admin/PostAdmin.php
 
-    class PostAdmin extends AbstractAdmin
+    final class PostAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -31,17 +33,18 @@ Example
         }
     }
 
+.. figure:: ../images/help_message.png
+   :align: center
+   :alt: Example of the two form fields with help messages.
+
 Alternative Ways To Define Help Messages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All at once
+All at once::
 
-.. code-block:: php
+    // src/Admin/PostAdmin.php
 
-    <?php
-    // src/AppBundle/Admin/PostAdmin.php
-
-    class PostAdmin extends AbstractAdmin
+    final class PostAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -58,14 +61,11 @@ All at once
         }
     }
 
-or step by step.
+or step by step::
 
-.. code-block:: php
+    // src/Admin/PostAdmin.php
 
-    <?php
-    // src/AppBundle/Admin/PostAdmin.php
-
-    class PostAdmin extends AbstractAdmin
+    final class PostAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -81,27 +81,22 @@ or step by step.
     }
 
 This can be very useful if you want to apply general help messages via an ``AdminExtension``.
-This Extension for example adds a note field to some entities which use a custom trait.
+This Extension for example adds a note field to some entities which use a custom trait::
 
-.. code-block:: php
-
-    <?php
-
-    namespace AppBundle\Admin\Extension;
+    namespace App\Admin\Extension;
 
     use Sonata\AdminBundle\Admin\AbstractAdminExtension;
     use Sonata\AdminBundle\Datagrid\DatagridMapper;
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Show\ShowMapper;
 
-    class NoteAdminExtension extends AbstractAdminExtension
+    final class NoteAdminExtension extends AbstractAdminExtension
     {
-
         // add this field to the datagrid every time its available
         /**
          * @param DatagridMapper $datagridMapper
          */
-        public function configureDatagridFilters(DatagridMapper $datagridMapper)
+        protected function configureDatagridFilters(DatagridMapper $datagridMapper)
         {
             $datagridMapper
                 ->add('note')
@@ -114,7 +109,7 @@ This Extension for example adds a note field to some entities which use a custom
         /**
          * @param FormMapper $formMapper
          */
-        public function configureFormFields(FormMapper $formMapper)
+        protected function configureFormFields(FormMapper $formMapper)
         {
             $formMapper
                 ->addHelp('note', 'Use this field for an internal note.')
@@ -125,7 +120,7 @@ This Extension for example adds a note field to some entities which use a custom
         /**
          * @param ShowMapper $showMapper
          */
-        public function configureShowFields(ShowMapper $showMapper)
+        protected function configureShowFields(ShowMapper $showMapper)
         {
             $showMapper
                 ->with('Internal')
@@ -135,27 +130,29 @@ This Extension for example adds a note field to some entities which use a custom
         }
     }
 
-
 Help messages in a sub-field
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/PostAdmin.php
+    // src/Admin/PostAdmin.php
 
-    class PostAdmin extends AbstractAdmin
+    use Sonata\Form\Type\ImmutableArrayType;
+    use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+    use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+
+    final class PostAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
             $formMapper
                 ->add('enabled')
-                ->add('settings', 'sonata_type_immutable_array', [
+                ->add('settings', ImmutableArrayType::class, [
                     'keys' => [
-                        ['content', 'textarea', [
+                        ['content', TextareaType::class, [
                             'sonata_help' => 'Set the content'
                         ]],
-                        ['public', 'checkbox', []],
+                        ['public', CheckboxType::class, []],
                     ]
                 ])
             ;
@@ -172,17 +169,18 @@ use help messages to display an image tag.
 Form Group Descriptions
 -----------------------
 
-A form group description is a block of text rendered below the group title. These can be used to describe a section of a form. The text is not escaped, so HTML can be used.
+A form group description is a block of text rendered below the group title.
+These can be used to describe a section of a form. The text is not escaped,
+so HTML can be used.
 
 Example
 ^^^^^^^
 
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/PostAdmin.php
+    // src/Admin/PostAdmin.php
 
-    class PostAdmin extends AbstractAdmin
+    final class PostAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -12,6 +14,7 @@
 namespace Sonata\AdminBundle\Command;
 
 use Sensio\Bundle\GeneratorBundle\SensioGeneratorBundle;
+use Sonata\AdminBundle\Controller\CRUDController;
 use Sonata\AdminBundle\Generator\AdminGenerator;
 use Sonata\AdminBundle\Generator\ControllerGenerator;
 use Sonata\AdminBundle\Manipulator\ServicesManipulator;
@@ -81,7 +84,7 @@ class GenerateAdminCommand extends QuestionableCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $modelClass = Validators::validateClass($input->getArgument('model'));
-        $modelClassBasename = current(array_slice(explode('\\', $modelClass), -1));
+        $modelClassBasename = current(\array_slice(explode('\\', $modelClass), -1));
         $bundle = $this->getBundle($input->getOption('bundle') ?: $this->getBundleNameFromClass($modelClass));
         $adminClassBasename = $input->getOption('admin') ?: $modelClassBasename.'Admin';
         $adminClassBasename = Validators::validateAdminClassBasename($adminClassBasename);
@@ -125,7 +128,7 @@ class GenerateAdminCommand extends QuestionableCommand
             $servicesManipulator = new ServicesManipulator($file);
             $controllerName = $controllerClassBasename
                 ? sprintf('%s:%s', $bundle->getName(), substr($controllerClassBasename, 0, -10))
-                : 'SonataAdminBundle:CRUD'
+                : CRUDController::class
             ;
 
             try {
@@ -156,7 +159,7 @@ class GenerateAdminCommand extends QuestionableCommand
             $input->getArgument('model'),
             'Sonata\AdminBundle\Command\Validators::validateClass'
         );
-        $modelClassBasename = current(array_slice(explode('\\', $modelClass), -1));
+        $modelClassBasename = current(\array_slice(explode('\\', $modelClass), -1));
         $bundleName = $this->askAndValidate(
             $input,
             $output,
@@ -172,7 +175,7 @@ class GenerateAdminCommand extends QuestionableCommand
             'Sonata\AdminBundle\Command\Validators::validateAdminClassBasename'
         );
 
-        if (count($this->getAvailableManagerTypes()) > 1) {
+        if (\count($this->getAvailableManagerTypes()) > 1) {
             $managerType = $this->askAndValidate(
                 $input,
                 $output,
@@ -222,13 +225,9 @@ class GenerateAdminCommand extends QuestionableCommand
     }
 
     /**
-     * @param string $class
-     *
      * @throws \InvalidArgumentException
-     *
-     * @return string|null
      */
-    private function getBundleNameFromClass($class)
+    private function getBundleNameFromClass(string $class): ?string
     {
         $application = $this->getApplication();
         /* @var $application Application */
@@ -238,32 +237,24 @@ class GenerateAdminCommand extends QuestionableCommand
                 return $bundle->getName();
             }
         }
+
+        return null;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return BundleInterface
-     */
-    private function getBundle($name)
+    private function getBundle(string $name): BundleInterface
     {
         return $this->getKernel()->getBundle($name);
     }
 
-    /**
-     * @param string $message
-     */
-    private function writeError(OutputInterface $output, $message)
+    private function writeError(OutputInterface $output, string $message): void
     {
         $output->writeln(sprintf("\n<error>%s</error>", $message));
     }
 
     /**
      * @throws \RuntimeException
-     *
-     * @return string
      */
-    private function getDefaultManagerType()
+    private function getDefaultManagerType(): string
     {
         if (!$managerTypes = $this->getAvailableManagerTypes()) {
             throw new \RuntimeException('There are no model managers registered.');
@@ -272,26 +263,18 @@ class GenerateAdminCommand extends QuestionableCommand
         return current($managerTypes);
     }
 
-    /**
-     * @param string $managerType
-     *
-     * @return ModelManagerInterface
-     */
-    private function getModelManager($managerType)
+    private function getModelManager(string $managerType): ModelManagerInterface
     {
-        return $this->getContainer()->get('sonata.admin.manager.'.$managerType);
+        $modelManager = $this->getContainer()->get('sonata.admin.manager.'.$managerType);
+        \assert($modelManager instanceof ModelManagerInterface);
+
+        return $modelManager;
     }
 
-    /**
-     * @param string $bundleName
-     * @param string $adminClassBasename
-     *
-     * @return string
-     */
-    private function getAdminServiceId($bundleName, $adminClassBasename)
+    private function getAdminServiceId(string $bundleName, string $adminClassBasename): string
     {
-        $prefix = 'Bundle' == substr($bundleName, -6) ? substr($bundleName, 0, -6) : $bundleName;
-        $suffix = 'Admin' == substr($adminClassBasename, -5) ? substr($adminClassBasename, 0, -5) : $adminClassBasename;
+        $prefix = 'Bundle' === substr($bundleName, -6) ? substr($bundleName, 0, -6) : $bundleName;
+        $suffix = 'Admin' === substr($adminClassBasename, -5) ? substr($adminClassBasename, 0, -5) : $adminClassBasename;
         $suffix = str_replace('\\', '.', $suffix);
 
         return Container::underscore(sprintf(
@@ -304,7 +287,7 @@ class GenerateAdminCommand extends QuestionableCommand
     /**
      * @return string[]
      */
-    private function getAvailableManagerTypes()
+    private function getAvailableManagerTypes(): array
     {
         $container = $this->getContainer();
 
@@ -326,10 +309,7 @@ class GenerateAdminCommand extends QuestionableCommand
         return $this->managerTypes;
     }
 
-    /**
-     * @return KernelInterface
-     */
-    private function getKernel()
+    private function getKernel(): KernelInterface
     {
         /* @var $application Application */
         $application = $this->getApplication();

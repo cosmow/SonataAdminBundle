@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -41,7 +43,7 @@ class FieldDescriptionCollection implements \ArrayAccess, \Countable
      */
     public function has($name)
     {
-        return array_key_exists($name, $this->elements);
+        return \array_key_exists($name, $this->elements);
     }
 
     /**
@@ -92,7 +94,7 @@ class FieldDescriptionCollection implements \ArrayAccess, \Countable
 
     public function count()
     {
-        return count($this->elements);
+        return \count($this->elements);
     }
 
     public function reorder(array $keys)

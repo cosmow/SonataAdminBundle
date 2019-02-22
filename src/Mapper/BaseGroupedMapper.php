@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -87,7 +89,7 @@ abstract class BaseGroupedMapper extends BaseMapper
         $code = $name;
 
         // Open
-        if (array_key_exists('tab', $options) && $options['tab']) {
+        if (\array_key_exists('tab', $options) && $options['tab']) {
             $tabs = $this->getTabs();
 
             if ($this->currentTab) {
@@ -120,7 +122,7 @@ abstract class BaseGroupedMapper extends BaseMapper
                 $this->with('default', [
                     'tab' => true,
                     'auto_created' => true,
-                    'translation_domain' => isset($options['translation_domain']) ? $options['translation_domain'] : null,
+                    'translation_domain' => $options['translation_domain'] ?? null,
                 ]); // add new tab automatically
             }
 
@@ -143,7 +145,7 @@ abstract class BaseGroupedMapper extends BaseMapper
             $tabs = $this->getTabs();
         }
 
-        if ($this->currentGroup && isset($tabs[$this->currentTab]) && !in_array($this->currentGroup, $tabs[$this->currentTab]['groups'])) {
+        if ($this->currentGroup && isset($tabs[$this->currentTab]) && !\in_array($this->currentGroup, $tabs[$this->currentTab]['groups'], true)) {
             $tabs[$this->currentTab]['groups'][] = $this->currentGroup;
         }
 

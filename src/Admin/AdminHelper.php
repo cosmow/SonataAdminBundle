@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -47,7 +49,7 @@ class AdminHelper
     public function getChildFormBuilder(FormBuilderInterface $formBuilder, $elementId)
     {
         foreach (new FormBuilderIterator($formBuilder) as $name => $formBuilder) {
-            if ($name == $elementId) {
+            if ($name === $elementId) {
                 return $formBuilder;
             }
         }
@@ -56,7 +58,7 @@ class AdminHelper
     /**
      * @param string $elementId
      *
-     * @return null|FormView
+     * @return FormView|null
      */
     public function getChildFormView(FormView $formView, $elementId)
     {
@@ -98,15 +100,34 @@ class AdminHelper
      */
     public function appendFormFieldElement(AdminInterface $admin, $subject, $elementId)
     {
+        // child rows marked as toDelete
+        $toDelete = [];
         // retrieve the subject
         $formBuilder = $admin->getFormBuilder();
+
+        // get the field element
+        $childFormBuilder = $this->getChildFormBuilder($formBuilder, $elementId);
+
+        if ($childFormBuilder) {
+            $formData = $admin->getRequest()->get($formBuilder->getName(), []);
+            if (\array_key_exists($childFormBuilder->getName(), $formData)) {
+                $formData = $admin->getRequest()->get($formBuilder->getName(), []);
+                $i = 0;
+                foreach ($formData[$childFormBuilder->getName()] as $name => &$field) {
+                    $toDelete[$i] = false;
+                    if (\array_key_exists('_delete', $field)) {
+                        $toDelete[$i] = true;
+                        unset($field['_delete']);
+                    }
+                    ++$i;
+                }
+            }
+            $admin->getRequest()->request->set($formBuilder->getName(), $formData);
+        }
 
         $form = $formBuilder->getForm();
         $form->setData($subject);
         $form->handleRequest($admin->getRequest());
-
-        // get the field element
-        $childFormBuilder = $this->getChildFormBuilder($formBuilder, $elementId);
 
         //Child form not found (probably nested one)
         //if childFormBuilder was not found resulted in fatal error getName() method call on non object
@@ -148,8 +169,8 @@ class AdminHelper
                 $data[$childFormBuilder->getName()] = [];
             }
 
-            $objectCount = count($value);
-            $postCount = count($data[$childFormBuilder->getName()]);
+            $objectCount = null === $value ? 0 : \count($value);
+            $postCount = \count($data[$childFormBuilder->getName()]);
 
             $fields = array_keys($fieldDescription->getAssociationAdmin()->getFormFieldDescriptions());
 
@@ -174,6 +195,15 @@ class AdminHelper
 
         // bind the data
         $finalForm->setData($form->getData());
+
+        // back up delete field
+        if (\count($toDelete) > 0) {
+            $i = 0;
+            foreach ($finalForm->get($childFormBuilder->getName()) as $childField) {
+                $childField->get('_delete')->setData(isset($toDelete[$i]) && $toDelete[$i]);
+                ++$i;
+            }
+        }
 
         return [$fieldDescription, $finalForm];
     }
@@ -288,7 +318,7 @@ class AdminHelper
     {
         $element = array_shift($elements);
         $associationAdmin = $admin->getFormFieldDescription($element)->getAssociationAdmin();
-        if (0 == count($elements)) {
+        if (0 === \count($elements)) {
             return $associationAdmin->getClass();
         }
 

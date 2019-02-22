@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -42,7 +44,7 @@ class ListMapperTest extends TestCase
      */
     private $admin;
 
-    public function setUp()
+    public function setUp(): void
     {
         $listBuilder = $this->createMock(ListBuilderInterface::class);
         $this->fieldDescriptionCollection = new FieldDescriptionCollection();
@@ -50,7 +52,7 @@ class ListMapperTest extends TestCase
 
         $listBuilder->expects($this->any())
             ->method('addField')
-            ->will($this->returnCallback(function ($list, $type, $fieldDescription, $admin) {
+            ->will($this->returnCallback(function ($list, $type, $fieldDescription, $admin): void {
                 $list->add($fieldDescription);
             }));
 
@@ -79,7 +81,7 @@ class ListMapperTest extends TestCase
         $this->listMapper = new ListMapper($listBuilder, $this->fieldDescriptionCollection, $this->admin);
     }
 
-    public function testFluidInterface()
+    public function testFluidInterface(): void
     {
         $fieldDescription = $this->getFieldDescriptionMock('fooName', 'fooLabel');
 
@@ -88,7 +90,7 @@ class ListMapperTest extends TestCase
         $this->assertSame($this->listMapper, $this->listMapper->reorder([]));
     }
 
-    public function testGet()
+    public function testGet(): void
     {
         $this->assertFalse($this->listMapper->has('fooName'));
 
@@ -98,7 +100,7 @@ class ListMapperTest extends TestCase
         $this->assertSame($fieldDescription, $this->listMapper->get('fooName'));
     }
 
-    public function testAddIdentifier()
+    public function testAddIdentifier(): void
     {
         $this->assertFalse($this->listMapper->has('fooName'));
 
@@ -108,7 +110,7 @@ class ListMapperTest extends TestCase
         $this->assertTrue($this->listMapper->has('fooName'));
     }
 
-    public function testAdd()
+    public function testAdd(): void
     {
         $this->listMapper->add('fooName');
         $this->listMapper->add('fooNameLabelBar', null, ['label' => 'Foo Bar']);
@@ -130,7 +132,7 @@ class ListMapperTest extends TestCase
     /**
      * @group legacy
      */
-    public function testLegacyAddViewInlineAction()
+    public function testLegacyAddViewInlineAction(): void
     {
         $this->assertFalse($this->listMapper->has('_action'));
         $this->listMapper->add('_action', 'actions', ['actions' => ['view' => []]]);
@@ -145,7 +147,7 @@ class ListMapperTest extends TestCase
         $this->assertSame(['show' => []], $fieldDescription->getOption('actions'));
     }
 
-    public function testAddViewInlineAction()
+    public function testAddViewInlineAction(): void
     {
         $this->assertFalse($this->listMapper->has('_action'));
         $this->listMapper->add('_action', 'actions', ['actions' => ['show' => []]]);
@@ -160,7 +162,7 @@ class ListMapperTest extends TestCase
         $this->assertSame(['show' => []], $fieldDescription->getOption('actions'));
     }
 
-    public function testAddRemove()
+    public function testAddRemove(): void
     {
         $this->assertFalse($this->listMapper->has('fooName'));
 
@@ -173,7 +175,7 @@ class ListMapperTest extends TestCase
         $this->assertFalse($this->listMapper->has('fooName'));
     }
 
-    public function testAddDuplicateNameException()
+    public function testAddDuplicateNameException(): void
     {
         $tmpNames = [];
         $this->admin->expects($this->any())
@@ -193,25 +195,28 @@ class ListMapperTest extends TestCase
         $this->listMapper->add('fooName');
     }
 
-    public function testAddWrongTypeException()
+    public function testAddWrongTypeException(): void
     {
         $this->expectException(\RuntimeException::class, 'Unknown field name in list mapper. Field name should be either of FieldDescriptionInterface interface or string.');
 
         $this->listMapper->add(12345);
     }
 
-    public function testAutoAddVirtualOption()
+    public function testAutoAddVirtualOption(): void
     {
         foreach (['actions', 'batch', 'select'] as $type) {
             $this->listMapper->add('_'.$type, $type);
         }
 
-        foreach ($this->fieldDescriptionCollection as $field) {
-            $this->assertTrue($field->isVirtual(), 'Failed asserting that FieldDescription with type "'.$field->getType().'" is tagged with virtual flag.');
+        foreach ($this->fieldDescriptionCollection->getElements() as $field) {
+            $this->assertTrue(
+                $field->isVirtual(),
+                'Failed asserting that FieldDescription with type "'.$field->getType().'" is tagged with virtual flag.'
+            );
         }
     }
 
-    public function testKeys()
+    public function testKeys(): void
     {
         $fieldDescription1 = $this->getFieldDescriptionMock('fooName1', 'fooLabel1');
         $fieldDescription2 = $this->getFieldDescriptionMock('fooName2', 'fooLabel2');
@@ -222,7 +227,7 @@ class ListMapperTest extends TestCase
         $this->assertSame(['fooName1', 'fooName2'], $this->listMapper->keys());
     }
 
-    public function testReorder()
+    public function testReorder(): void
     {
         $fieldDescription1 = $this->getFieldDescriptionMock('fooName1', 'fooLabel1');
         $fieldDescription2 = $this->getFieldDescriptionMock('fooName2', 'fooLabel2');
@@ -252,7 +257,7 @@ class ListMapperTest extends TestCase
         ], true), print_r($this->fieldDescriptionCollection->getElements(), true));
     }
 
-    private function getFieldDescriptionMock($name = null, $label = null)
+    private function getFieldDescriptionMock(?string $name = null, ?string $label = null): BaseFieldDescription
     {
         $fieldDescription = $this->getMockForAbstractClass(BaseFieldDescription::class);
 

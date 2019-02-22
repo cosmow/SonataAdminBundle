@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -17,8 +19,8 @@ namespace Sonata\AdminBundle\Datagrid;
  */
 abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInterface
 {
-    const TYPE_DEFAULT = 'default';
-    const TYPE_SIMPLE = 'simple';
+    public const TYPE_DEFAULT = 'default';
+    public const TYPE_SIMPLE = 'simple';
 
     /**
      * @var int
@@ -133,7 +135,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
      */
     public function getLinks($nbLinks = null)
     {
-        if (null == $nbLinks) {
+        if (null === $nbLinks) {
             $nbLinks = $this->getMaxPageLinks();
         }
         $links = [];
@@ -147,7 +149,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
             $links[] = $i++;
         }
 
-        $this->currentMaxLink = count($links) ? $links[count($links) - 1] : 1;
+        $this->currentMaxLink = \count($links) ? $links[\count($links) - 1] : 1;
 
         return $links;
     }
@@ -249,7 +251,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
      */
     public function getFirstIndex()
     {
-        if (0 == $this->page) {
+        if (0 === $this->page) {
             return 1;
         }
 
@@ -279,7 +281,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
      */
     public function getLastIndex()
     {
-        if (0 == $this->page) {
+        if (0 === $this->page) {
             return $this->nbResults;
         }
         if ($this->page * $this->maxPerPage >= $this->nbResults) {
@@ -372,16 +374,16 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
     {
         if ($max > 0) {
             $this->maxPerPage = $max;
-            if (0 == $this->page) {
+            if (0 === $this->page) {
                 $this->page = 1;
             }
         } else {
-            if (0 == $max) {
+            if (0 === $max) {
                 $this->maxPerPage = 0;
                 $this->page = 0;
             } else {
                 $this->maxPerPage = 1;
-                if (0 == $this->page) {
+                if (0 === $this->page) {
                     $this->page = 1;
                 }
             }
@@ -405,7 +407,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
      */
     public function isFirstPage()
     {
-        return 1 == $this->page;
+        return 1 === $this->page;
     }
 
     /**
@@ -415,7 +417,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
      */
     public function isLastPage()
     {
-        return $this->page == $this->lastPage;
+        return $this->page === $this->lastPage;
     }
 
     /**
@@ -499,7 +501,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
             $this->initializeIterator();
         }
 
-        $this->resultsCounter = count($this->results);
+        $this->resultsCounter = \count($this->results);
 
         return reset($this->results);
     }
@@ -600,7 +602,7 @@ abstract class Pager implements \Iterator, \Countable, \Serializable, PagerInter
     protected function initializeIterator()
     {
         $this->results = $this->getResults();
-        $this->resultsCounter = count($this->results);
+        $this->resultsCounter = \count($this->results);
     }
 
     /**

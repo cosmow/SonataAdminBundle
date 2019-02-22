@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -11,6 +13,7 @@
 
 namespace Sonata\AdminBundle\Form\Type\Filter;
 
+use Sonata\CoreBundle\Form\Type\DateTimeRangeType as FormDateTimeRangeType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType as FormChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -24,8 +27,8 @@ use Symfony\Component\Translation\TranslatorInterface;
  */
 class DateTimeRangeType extends AbstractType
 {
-    const TYPE_BETWEEN = 1;
-    const TYPE_NOT_BETWEEN = 2;
+    public const TYPE_BETWEEN = 1;
+    public const TYPE_NOT_BETWEEN = 2;
 
     /**
      * NEXT_MAJOR: remove this property.
@@ -94,7 +97,7 @@ class DateTimeRangeType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'field_type' => 'sonata_type_datetime_range',
+            'field_type' => FormDateTimeRangeType::class,
             'field_options' => ['date_format' => 'yyyy-MM-dd'],
         ]);
     }

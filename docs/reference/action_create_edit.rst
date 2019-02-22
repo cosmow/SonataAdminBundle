@@ -1,15 +1,8 @@
 Creating and Editing objects
 ============================
 
-.. note::
-
-    This document is a stub representing a new work in progress. If you're reading
-    this you can help contribute, **no matter what your experience level with Sonata
-    is**. Check out the `issues on Github`_ for more information about how to get involved.
-
 This document will cover the Create and Edit actions. It will cover configuration
 of the fields and forms available in these views and any other relevant settings.
-
 
 Basic configuration
 -------------------
@@ -18,27 +11,28 @@ SonataAdmin Options that may affect the create or edit view:
 
 .. code-block:: yaml
 
+    # config/packages/sonata_admin.yaml
+
     sonata_admin:
         options:
-            html5_validate:    true     # enable or disable html5 form validation
-            confirm_exit:      true     # enable or disable a confirmation before navigating away
-            use_select2:       true     # enable or disable usage of the Select2 jQuery library
-            use_icheck:        true     # enable or disable usage of the iCheck library
-            use_bootlint:      false    # enable or disable usage of Bootlint
-            use_stickyforms:   true     # enable or disable the floating buttons
-            form_type:         standard # can also be 'horizontal'
+            html5_validate:  true     # enable or disable html5 form validation
+            confirm_exit:    true     # enable or disable a confirmation before navigating away
+            js_debug:        false    # enable or disable to show javascript debug messages
+            use_select2:     true     # enable or disable usage of the Select2 jQuery library
+            use_icheck:      true     # enable or disable usage of the iCheck library
+            use_bootlint:    false    # enable or disable usage of Bootlint
+            use_stickyforms: true     # enable or disable the floating buttons
+            form_type:       standard # can also be 'horizontal'
 
         templates:
-            edit:              SonataAdminBundle:CRUD:edit.html.twig
-            tab_menu_template: SonataAdminBundle:Core:tab_menu_template.html.twig
-
+            edit:              '@SonataAdmin/CRUD/edit.html.twig'
+            tab_menu_template: '@SonataAdmin/Core/tab_menu_template.html.twig'
 
 For more information about optional libraries:
 
 - Select2: https://github.com/select2/select2
 - iCheck: http://icheck.fronteed.com/
 - Bootlint: https://github.com/twbs/bootlint#in-the-browser
-
 
 .. note::
 
@@ -49,31 +43,22 @@ Routes
 ~~~~~~
 
 You can disable creating or editing entities by removing the corresponding routes in your Admin.
-For more detailed information about routes, see :doc:`routing`.
+For more detailed information about routes, see :doc:`routing`::
 
-.. code-block:: php
+    // src/Admin/PersonAdmin.php
 
-    <?php
-    // src/AppBundle/Admin/PersonAdmin.php
-
-    class PersonAdmin extends AbstractAdmin
+    final class PersonAdmin extends AbstractAdmin
     {
-        // ...
-
         protected function configureRoutes(RouteCollection $collection): void
         {
             /* Removing the edit route will disable editing entities. It will also
-             * use the 'show' view as default link on the identifier columns in the list view.
-             */
+            use the 'show' view as default link on the identifier columns in the list view. */
             $collection->remove('edit');
 
             /* Removing the create route will disable creating new entities. It will also
-             * remove the 'Add new' button in the list view.
-             */
+            remove the 'Add new' button in the list view. */
             $collection->remove('create');
         }
-
-        // ...
     }
 
 Adding form fields
@@ -104,16 +89,12 @@ has 4 parameters:
     The property entered in ``name`` should be available in your Entity
     through getters/setters or public access.
 
-
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/PersonAdmin.php
+    // src/Admin/PersonAdmin.php
 
-    class PersonAdmin extends AbstractAdmin
+    final class PersonAdmin extends AbstractAdmin
     {
-        // ...
-
         protected function configureFormFields(FormMapper $formMapper): void
         {
             $formMapper
@@ -127,10 +108,7 @@ has 4 parameters:
                 ->end() // End tab
             ;
         }
-
-        // ...
     }
-
 
 FormGroup options
 ~~~~~~~~~~~~~~~~~
@@ -149,18 +127,13 @@ options for the group itself.
 - ``translation_domain``: The translation domain for the form group title
   (the Admin translation domain is used by default).
 
-To specify options, do as follows:
+To specify options, do as follows::
 
-.. code-block:: php
+    // src/Admin/PersonAdmin.php
 
-    <?php
-    // src/AppBundle/Admin/PersonAdmin.php
-
-    class PersonAdmin extends AbstractAdmin
+    final class PersonAdmin extends AbstractAdmin
     {
-        // ...
-
-        public function configureFormFields(FormMapper $formMapper): void
+        protected function configureFormFields(FormMapper $formMapper): void
         {
             $formMapper
                 ->tab('General') // the tab call is optional
@@ -176,8 +149,6 @@ To specify options, do as follows:
                 ->end()
             ;
         }
-
-        // ...
     }
 
 Here is an example of what you can do with customizing the box_class on
@@ -197,13 +168,11 @@ Embedding other Admins
     * how to embed one Admin in another (1:1, 1:M, M:M)
     * how to access the right object(s) from the embedded Admin's code
 
-Customizing just one of the actions
+Customizing only one of the actions
 -----------------------------------
 
 .. note::
 
     **TODO**:
-    * how to create settings/fields that appear on just one of the create/edit views
+    * how to create settings/fields that appear on only one of the create/edit views
     * and any controller changes needed to manage them
-
-.. _`issues on GitHub`: https://github.com/sonata-project/SonataAdminBundle/issues/1519

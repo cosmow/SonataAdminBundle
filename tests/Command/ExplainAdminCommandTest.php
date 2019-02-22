@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -18,6 +20,7 @@ use Sonata\AdminBundle\Admin\Pool;
 use Sonata\AdminBundle\Builder\DatagridBuilderInterface;
 use Sonata\AdminBundle\Builder\ListBuilderInterface;
 use Sonata\AdminBundle\Command\ExplainAdminCommand;
+use Sonata\AdminBundle\Controller\CRUDController;
 use Sonata\AdminBundle\Model\ModelManagerInterface;
 use Sonata\AdminBundle\Route\RouteCollection;
 use Symfony\Component\Console\Application;
@@ -51,7 +54,7 @@ class ExplainAdminCommandTest extends TestCase
      */
     private $validatorFactory;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->application = new Application();
         $command = new ExplainAdminCommand();
@@ -70,9 +73,9 @@ class ExplainAdminCommandTest extends TestCase
 
         $this->admin->expects($this->any())
             ->method('getBaseControllerName')
-            ->will($this->returnValue('SonataAdminBundle:CRUD'));
+            ->will($this->returnValue(CRUDController::class));
 
-        $routeCollection = new RouteCollection('foo', 'fooBar', 'foo-bar', 'SonataAdminBundle:CRUD');
+        $routeCollection = new RouteCollection('foo', 'fooBar', 'foo-bar', CRUDController::class);
         $routeCollection->add('list');
         $routeCollection->add('edit');
 
@@ -88,7 +91,7 @@ class ExplainAdminCommandTest extends TestCase
 
         $fieldDescription1->expects($this->any())
             ->method('getTemplate')
-            ->will($this->returnValue('SonataAdminBundle:CRUD:foo_text.html.twig'));
+            ->will($this->returnValue('@SonataAdmin/CRUD/foo_text.html.twig'));
 
         $fieldDescription2 = $this->createMock(FieldDescriptionInterface::class);
 
@@ -98,7 +101,7 @@ class ExplainAdminCommandTest extends TestCase
 
         $fieldDescription2->expects($this->any())
             ->method('getTemplate')
-            ->will($this->returnValue('SonataAdminBundle:CRUD:bar_datetime.html.twig'));
+            ->will($this->returnValue('@SonataAdmin/CRUD/bar_datetime.html.twig'));
 
         $this->admin->expects($this->any())
             ->method('getListFieldDescriptions')
@@ -116,7 +119,7 @@ class ExplainAdminCommandTest extends TestCase
 
         $this->admin->expects($this->any())
             ->method('getFormTheme')
-            ->will($this->returnValue(['FooBundle::bar.html.twig']));
+            ->will($this->returnValue(['@Foo/bar.html.twig']));
 
         $this->admin->expects($this->any())
             ->method('getFormFieldDescriptions')
@@ -153,7 +156,7 @@ class ExplainAdminCommandTest extends TestCase
 
                         return $pool;
 
-                    case 'validator.validator_factory':
+                    case 'validator':
                         return $this->validatorFactory;
 
                     case 'acme.admin.foo':
@@ -168,7 +171,7 @@ class ExplainAdminCommandTest extends TestCase
         $this->application->add($command);
     }
 
-    public function testExecute()
+    public function testExecute(): void
     {
         $metadata = $this->createMock(MetadataInterface::class);
 
@@ -223,15 +226,15 @@ class ExplainAdminCommandTest extends TestCase
 
         $this->assertSame(sprintf(
             str_replace("\n", PHP_EOL, file_get_contents(__DIR__.'/../Fixtures/Command/explain_admin.txt')),
-            get_class($this->admin),
-            get_class($modelManager),
-            get_class($formBuilder),
-            get_class($datagridBuilder),
-            get_class($listBuilder)
+            \get_class($this->admin),
+            \get_class($modelManager),
+            \get_class($formBuilder),
+            \get_class($datagridBuilder),
+            \get_class($listBuilder)
         ), $commandTester->getDisplay());
     }
 
-    public function testExecuteEmptyValidator()
+    public function testExecuteEmptyValidator(): void
     {
         $metadata = $this->createMock(MetadataInterface::class);
 
@@ -277,15 +280,15 @@ class ExplainAdminCommandTest extends TestCase
                 PHP_EOL,
                 file_get_contents(__DIR__.'/../Fixtures/Command/explain_admin_empty_validator.txt')
             ),
-            get_class($this->admin),
-            get_class($modelManager),
-            get_class($formBuilder),
-            get_class($datagridBuilder),
-            get_class($listBuilder)
+            \get_class($this->admin),
+            \get_class($modelManager),
+            \get_class($formBuilder),
+            \get_class($datagridBuilder),
+            \get_class($listBuilder)
         ), $commandTester->getDisplay());
     }
 
-    public function testExecuteNonAdminService()
+    public function testExecuteNonAdminService(): void
     {
         try {
             $command = $this->application->find('sonata:admin:explain');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -123,6 +125,11 @@ abstract class BaseFieldDescription implements FieldDescriptionInterface
      * @var string the help message to display
      */
     protected $help;
+
+    /**
+     * @var array[] cached object field getters
+     */
+    private static $fieldGetters = [];
 
     public function setFieldName($fieldName)
     {
@@ -258,11 +265,9 @@ abstract class BaseFieldDescription implements FieldDescriptionInterface
 
     public function getFieldValue($object, $fieldName)
     {
-        if ($this->isVirtual()) {
+        if ($this->isVirtual() || null === $object) {
             return;
         }
-
-        $camelizedFieldName = Inflector::classify($fieldName);
 
         $getters = [];
         $parameters = [];
@@ -275,21 +280,36 @@ abstract class BaseFieldDescription implements FieldDescriptionInterface
         if ($this->getOption('parameters')) {
             $parameters = $this->getOption('parameters');
         }
-        $getters[] = 'get'.$camelizedFieldName;
-        $getters[] = 'is'.$camelizedFieldName;
-        $getters[] = 'has'.$camelizedFieldName;
+
+        if (\is_string($fieldName) && '' !== $fieldName) {
+            if ($this->hasCachedFieldGetter($object, $fieldName)) {
+                return $this->callCachedGetter($object, $fieldName, $parameters);
+            }
+
+            $camelizedFieldName = Inflector::classify($fieldName);
+
+            $getters[] = 'get'.$camelizedFieldName;
+            $getters[] = 'is'.$camelizedFieldName;
+            $getters[] = 'has'.$camelizedFieldName;
+        }
 
         foreach ($getters as $getter) {
-            if (method_exists($object, $getter)) {
-                return call_user_func_array([$object, $getter], $parameters);
+            if (method_exists($object, $getter) && \is_callable([$object, $getter])) {
+                $this->cacheFieldGetter($object, $fieldName, 'getter', $getter);
+
+                return \call_user_func_array([$object, $getter], $parameters);
             }
         }
 
         if (method_exists($object, '__call')) {
-            return call_user_func_array([$object, '__call'], [$fieldName, $parameters]);
+            $this->cacheFieldGetter($object, $fieldName, 'call');
+
+            return \call_user_func_array([$object, '__call'], [$fieldName, $parameters]);
         }
 
         if (isset($object->{$fieldName})) {
+            $this->cacheFieldGetter($object, $fieldName, 'var');
+
             return $object->{$fieldName};
         }
 
@@ -312,7 +332,7 @@ abstract class BaseFieldDescription implements FieldDescriptionInterface
             $this->options[$name] = [];
         }
 
-        if (!is_array($this->options[$name])) {
+        if (!\is_array($this->options[$name])) {
             throw new \RuntimeException(sprintf('The key `%s` does not point to an array value', $name));
         }
 
@@ -409,5 +429,60 @@ abstract class BaseFieldDescription implements FieldDescriptionInterface
     public function isVirtual()
     {
         return false !== $this->getOption('virtual_field', false);
+    }
+
+    private function getFieldGetterKey($object, ?string $fieldName): ?string
+    {
+        if (!\is_string($fieldName)) {
+            return null;
+        }
+        if (!\is_object($object)) {
+            return null;
+        }
+        $components = [\get_class($object), $fieldName];
+        $code = $this->getOption('code');
+        if (\is_string($code) && '' !== $code) {
+            $components[] = $code;
+        }
+
+        return implode('-', $components);
+    }
+
+    private function hasCachedFieldGetter($object, string $fieldName): bool
+    {
+        return isset(
+            self::$fieldGetters[$this->getFieldGetterKey($object, $fieldName)]
+        );
+    }
+
+    private function callCachedGetter($object, string $fieldName, array $parameters = [])
+    {
+        $getterKey = $this->getFieldGetterKey($object, $fieldName);
+        if ('getter' === self::$fieldGetters[$getterKey]['method']) {
+            return \call_user_func_array(
+                [$object, self::$fieldGetters[$getterKey]['getter']],
+                $parameters
+            );
+        } elseif ('call' === self::$fieldGetters[$getterKey]['method']) {
+            return \call_user_func_array(
+                [$object, '__call'],
+                [$fieldName, $parameters]
+            );
+        }
+
+        return $object->{$fieldName};
+    }
+
+    private function cacheFieldGetter($object, ?string $fieldName, string $method, ?string $getter = null)
+    {
+        $getterKey = $this->getFieldGetterKey($object, $fieldName);
+        if (null !== $getterKey) {
+            self::$fieldGetters[$getterKey] = [
+                'method' => $method,
+            ];
+            if (null !== $getter) {
+                self::$fieldGetters[$getterKey]['getter'] = $getter;
+            }
+        }
     }
 }

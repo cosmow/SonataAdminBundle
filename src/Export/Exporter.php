@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -15,7 +17,7 @@ use Sonata\CoreBundle\Exporter\Exporter as BaseExporter;
 
 @trigger_error(
     'The '.__NAMESPACE__.'\Exporter class is deprecated since version 3.14 and will be removed in 4.0.'.
-    ' Use Exporter\Exporter instead',
+    ' Use \Sonata\Exporter\Exporter instead',
     E_USER_DEPRECATED
 );
 

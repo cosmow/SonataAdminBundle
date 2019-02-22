@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -78,7 +80,7 @@ class FormTypeFieldExtension extends AbstractTypeExtension
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
         $sonataAdmin = $form->getConfig()->getAttribute('sonata_admin');
-        $sonataAdminHelp = isset($options['sonata_help']) ? $options['sonata_help'] : null;
+        $sonataAdminHelp = $options['sonata_help'] ?? null;
 
         /*
          * We have a child, so we need to upgrade block prefix
@@ -87,7 +89,7 @@ class FormTypeFieldExtension extends AbstractTypeExtension
             $blockPrefixes = $view->vars['block_prefixes'];
             $baseName = str_replace('.', '_', $view->parent->vars['sonata_admin_code']);
 
-            $baseType = $blockPrefixes[count($blockPrefixes) - 2];
+            $baseType = $blockPrefixes[\count($blockPrefixes) - 2];
             $blockSuffix = preg_replace('#^_([a-z0-9]{14})_(.++)$#', '$2', array_pop($blockPrefixes));
 
             $blockPrefixes[] = sprintf('%s_%s', $baseName, $baseType);
@@ -119,7 +121,7 @@ class FormTypeFieldExtension extends AbstractTypeExtension
             // add a new block types, so the Admin Form element can be tweaked based on the admin code
             $blockPrefixes = $view->vars['block_prefixes'];
             $baseName = str_replace('.', '_', $sonataAdmin['admin']->getCode());
-            $baseType = $blockPrefixes[count($blockPrefixes) - 2];
+            $baseType = $blockPrefixes[\count($blockPrefixes) - 2];
             $blockSuffix = preg_replace('#^_([a-z0-9]{14})_(.++)$#', '$2', array_pop($blockPrefixes));
 
             $blockPrefixes[] = sprintf('%s_%s', $baseName, $baseType);
@@ -153,6 +155,11 @@ class FormTypeFieldExtension extends AbstractTypeExtension
     public function getExtendedType()
     {
         return FormType::class;
+    }
+
+    public static function getExtendedTypes()
+    {
+        return [FormType::class];
     }
 
     /**
@@ -212,7 +219,7 @@ class FormTypeFieldExtension extends AbstractTypeExtension
         foreach ($this->getTypes($formBuilder) as $type) {
             // NEXT_MAJOR: Remove the else part when dropping support for SF 2.8
             if (!method_exists($type, 'getName')) {
-                $name = get_class($type);
+                $name = \get_class($type);
             } else {
                 $name = $type->getName();
             }

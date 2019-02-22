@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -47,6 +49,9 @@ class ModelHiddenType extends AbstractType
         $resolver->setDefaults([
             'model_manager' => null,
             'class' => null,
+            'attr' => [
+                'hidden' => true,
+            ],
         ]);
     }
 

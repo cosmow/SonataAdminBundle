@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -15,23 +17,30 @@ use Knp\Menu\Matcher\MatcherInterface;
 use Knp\Menu\Provider\MenuProviderInterface;
 use Knp\Menu\Silex\RouterAwareFactory;
 use PHPUnit\Framework\TestCase;
+use Sonata\AdminBundle\Controller\CRUDController;
 use Sonata\AdminBundle\DependencyInjection\Compiler\AddDependencyCallsCompilerPass;
 use Sonata\AdminBundle\DependencyInjection\SonataAdminExtension;
 use Sonata\AdminBundle\Route\RoutesCache;
+use Sonata\BlockBundle\DependencyInjection\SonataBlockExtension;
 use Sonata\DoctrinePHPCRAdminBundle\Route\PathInfoBuilderSlashes;
 use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Bundle\FrameworkBundle\Translation\Translator;
 use Symfony\Bundle\FrameworkBundle\Translation\TranslatorInterface;
 use Symfony\Bundle\FrameworkBundle\Validator\ConstraintValidatorFactory;
 use Symfony\Bundle\FrameworkBundle\Validator\Validator;
+use Symfony\Component\Config\FileLocatorInterface;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * @author Tiago Garcia
@@ -44,7 +53,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
     /** @var array $config */
     private $config;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -52,7 +61,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $this->config = $this->getConfig();
     }
 
-    public function testTranslatorDisabled()
+    public function testTranslatorDisabled(): void
     {
         $this->expectException(
             \RuntimeException::class, 'The "translator" service is not yet enabled.
@@ -76,7 +85,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
     /**
      * @covers \Sonata\AdminBundle\DependencyInjection\Compiler\AddDependencyCallsCompilerPass::process
      */
-    public function testProcessParsingFullValidConfig()
+    public function testProcessParsingFullValidConfig(): void
     {
         $container = $this->getContainer();
         $this->extension->load([$this->config], $container);
@@ -140,7 +149,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
     /**
      * @covers \Sonata\AdminBundle\DependencyInjection\Compiler\AddDependencyCallsCompilerPass::process
      */
-    public function testProcessResultingConfig()
+    public function testProcessResultingConfig(): void
     {
         $container = $this->getContainer();
         $this->extension->load([$this->config], $container);
@@ -177,7 +186,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $this->assertContains('sonata_post_admin', $adminGroups['sonata_group_one']['items'][0]['admin']);
         $this->assertContains('sonata_news_admin', $adminGroups['sonata_group_one']['items']);
         $this->assertContains('sonata_news_admin', $adminGroups['sonata_group_one']['item_adds']);
-        $this->assertFalse(in_array('sonata_article_admin', $adminGroups['sonata_group_one']['items']));
+        $this->assertFalse(\in_array('sonata_article_admin', $adminGroups['sonata_group_one']['items'], true));
         $this->assertContains('ROLE_ONE', $adminGroups['sonata_group_one']['roles']);
 
         $this->assertArrayHasKey('sonata_group_two', $adminGroups);
@@ -196,7 +205,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $newsRouteBuilderMethodCall = current(array_filter(
             $container->getDefinition('sonata_news_admin')->getMethodCalls(),
             function ($element) {
-                return 'setRouteBuilder' == $element[0];
+                return 'setRouteBuilder' === $element[0];
             }
         ));
         $this->assertSame(
@@ -207,7 +216,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $articleRouteBuilderMethodCall = current(array_filter(
             $container->getDefinition('sonata_article_admin')->getMethodCalls(),
             function ($element) {
-                return 'setRouteBuilder' == $element[0];
+                return 'setRouteBuilder' === $element[0];
             }
         ));
         $definitionOrReference = $articleRouteBuilderMethodCall[1][0];
@@ -226,7 +235,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         }
     }
 
-    public function testProcessSortAdmins()
+    public function testProcessSortAdmins(): void
     {
         $container = $this->getContainer();
 
@@ -247,7 +256,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $this->assertSame('1 Entry', $adminGroups[0]['items'][0]['label'], 'second entry for group in configuration, first in list');
     }
 
-    public function testProcessGroupNameAsParameter()
+    public function testProcessGroupNameAsParameter(): void
     {
         $config = [
             'dashboard' => [
@@ -272,7 +281,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $this->assertArrayNotHasKey('%sonata.admin.parameter.groupname%', $adminGroups);
     }
 
-    public function testApplyTemplatesConfiguration()
+    public function testApplyTemplatesConfiguration(): void
     {
         $container = $this->getContainer();
 
@@ -289,8 +298,8 @@ class AddDependencyCallsCompilerPassTest extends TestCase
             switch ($name) {
                 case 'setTemplates':
                     $this->assertSame('foobar.twig.html', $parameters[0]['user_block']);
-                    $this->assertSame('SonataAdminBundle:Pager:results.html.twig', $parameters[0]['pager_results']);
-                    $this->assertSame('SonataAdminBundle:Button:create_button.html.twig', $parameters[0]['button_create']);
+                    $this->assertSame('@SonataAdmin/Pager/results.html.twig', $parameters[0]['pager_results']);
+                    $this->assertSame('@SonataAdmin/Button/create_button.html.twig', $parameters[0]['button_create']);
 
                     break;
 
@@ -314,7 +323,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
             switch ($name) {
                 case 'setTemplates':
                     $this->assertSame('foo.twig.html', $parameters[0]['user_block']);
-                    $this->assertSame('SonataAdminBundle:Pager:simple_pager_results.html.twig', $parameters[0]['pager_results']);
+                    $this->assertSame('@SonataAdmin/Pager/simple_pager_results.html.twig', $parameters[0]['pager_results']);
 
                     break;
 
@@ -331,7 +340,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         }
     }
 
-    public function testApplyShowMosaicButtonConfiguration()
+    public function testApplyShowMosaicButtonConfiguration(): void
     {
         $container = $this->getContainer();
 
@@ -345,7 +354,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         foreach ($callsReportOneAdmin as $call) {
             list($name, $parameters) = $call;
 
-            if ('showMosaicButton' == $name) {
+            if ('showMosaicButton' === $name) {
                 $this->assertFalse($parameters[0]);
             }
         }
@@ -355,13 +364,13 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         foreach ($callsReportTwoAdmin as $call) {
             list($name, $parameters) = $call;
 
-            if ('showMosaicButton' == $name) {
+            if ('showMosaicButton' === $name) {
                 $this->assertTrue($parameters[0]);
             }
         }
     }
 
-    public function testProcessMultipleOnTopOptions()
+    public function testProcessMultipleOnTopOptions(): void
     {
         $container = $this->getContainer();
 
@@ -383,7 +392,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $compilerPass->process($container);
     }
 
-    public function testProcessMultipleOnTopOptionsAdditionalGroup()
+    public function testProcessMultipleOnTopOptionsAdditionalGroup(): void
     {
         $container = $this->getContainer();
 
@@ -419,7 +428,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $compilerPass->process($container);
     }
 
-    public function testProcessMultipleOnTopOptionsInServiceDefinition()
+    public function testProcessMultipleOnTopOptionsInServiceDefinition(): void
     {
         $container = $this->getContainer();
 
@@ -432,7 +441,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $container
             ->register('sonata_report_one_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportOne::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportOne::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_report_group', 'manager_type' => 'orm', 'on_top' => true]);
 
         $this->expectException(\RuntimeException::class, 'You can\'t use "on_top" option with multiple same name groups.');
@@ -440,7 +449,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $compilerPass->process($container);
     }
 
-    public function testProcessMultipleOnTopOptionsInServiceDefinition1()
+    public function testProcessMultipleOnTopOptionsInServiceDefinition1(): void
     {
         $container = $this->getContainer();
 
@@ -453,7 +462,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $container
             ->register('sonata_report_two_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportOne::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportOne::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_report_group', 'manager_type' => 'orm', 'on_top' => false]);
 
         $this->expectException(\RuntimeException::class, 'You can\'t use "on_top" option with multiple same name groups.');
@@ -461,7 +470,10 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $compilerPass->process($container);
     }
 
-    public function testProcessMultipleOnTopOptionsInServiceDefinition2()
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testProcessMultipleOnTopOptionsInServiceDefinition2(): void
     {
         $container = $this->getContainer();
 
@@ -474,12 +486,12 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $container
             ->register('sonata_document_one_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportOne::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportOne::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_document_group', 'manager_type' => 'orm', 'on_top' => false]);
         $container
             ->register('sonata_document_two_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportOne::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportOne::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_document_group', 'manager_type' => 'orm', 'on_top' => false]);
 
         try {
@@ -489,7 +501,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         }
     }
 
-    public function testProcessAbstractAdminServiceInServiceDefinition()
+    public function testProcessAbstractAdminServiceInServiceDefinition(): void
     {
         $container = $this->getContainer();
 
@@ -544,13 +556,13 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $definition = $container->getDefinition('sonata_post_one_admin');
         $this->assertSame('sonata_post_one_admin', $definition->getArgument(0));
         $this->assertSame(Post::class, $definition->getArgument(1));
-        $this->assertSame('SonataAdminBundle:CRUD', $definition->getArgument(2));
+        $this->assertSame(CRUDController::class, $definition->getArgument(2));
         $this->assertSame('extra_argument_1', $definition->getArgument(3));
 
         $definition = $container->getDefinition('sonata_post_two_admin');
         $this->assertSame('sonata_post_two_admin', $definition->getArgument(0));
         $this->assertSame(Post::class, $definition->getArgument(1));
-        $this->assertSame('SonataAdminBundle:CRUD', $definition->getArgument(2));
+        $this->assertSame(CRUDController::class, $definition->getArgument(2));
         $this->assertSame('extra_argument_2', $definition->getArgument(3));
     }
 
@@ -620,7 +632,7 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         return $config;
     }
 
-    private function getContainer()
+    private function getContainer(): ContainerBuilder
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.bundles', [
@@ -655,6 +667,15 @@ class AddDependencyCallsCompilerPassTest extends TestCase
         $container
             ->register('form.factory')
             ->setClass(FormFactoryInterface::class);
+        $container
+            ->register('request_stack')
+            ->setClass(RequestStack::class);
+        $container
+            ->register('session')
+            ->setClass(Session::class);
+        $container
+            ->register('security.authorization_checker')
+            ->setClass(AuthorizationCheckerInterface::class);
         foreach ([
             'doctrine_phpcr' => 'PHPCR',
             'orm' => 'ORM', ] as $key => $bundleSubstring) {
@@ -713,35 +734,35 @@ class AddDependencyCallsCompilerPassTest extends TestCase
             ->register('sonata_news_admin')
             ->setPublic(true)
             ->setClass(MockAdmin::class)
-            ->setArguments(['', News::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', News::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_group_two', 'label' => '5 Entry', 'manager_type' => 'orm']);
         $container
             ->register('sonata_post_admin')
             ->setClass(MockAdmin::class)
             ->setPublic(true)
-            ->setArguments(['', Post::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', Post::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_group_one', 'manager_type' => 'orm']);
         $container
             ->register('sonata_article_admin')
             ->setPublic(true)
             ->setClass(MockAdmin::class)
-            ->setArguments(['', Article::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', Article::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_group_one', 'label' => '1 Entry', 'manager_type' => 'doctrine_phpcr']);
         $container
             ->register('sonata_report_admin')
             ->setPublic(true)
             ->setClass(MockAdmin::class)
-            ->setArguments(['', Report::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', Report::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_report_group', 'manager_type' => 'orm', 'on_top' => true]);
         $container
             ->register('sonata_report_one_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportOne::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportOne::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_report_one_group', 'manager_type' => 'orm', 'show_mosaic_button' => false]);
         $container
             ->register('sonata_report_two_admin')
             ->setClass(MockAdmin::class)
-            ->setArguments(['', ReportTwo::class, 'SonataAdminBundle:CRUD'])
+            ->setArguments(['', ReportTwo::class, CRUDController::class])
             ->addTag('sonata.admin', ['group' => 'sonata_report_two_group', 'manager_type' => 'orm', 'show_mosaic_button' => true]);
 
         // translator
@@ -749,6 +770,17 @@ class AddDependencyCallsCompilerPassTest extends TestCase
             ->register('translator.default')
             ->setClass(Translator::class);
         $container->setAlias('translator', 'translator.default');
+
+        // Add definitions for sonata.templating service
+        $container
+            ->register('kernel')
+            ->setClass(KernelInterface::class);
+        $container
+            ->register('file_locator')
+            ->setClass(FileLocatorInterface::class);
+
+        $blockExtension = new SonataBlockExtension();
+        $blockExtension->load([], $container);
 
         return $container;
     }

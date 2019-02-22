@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -63,7 +65,7 @@ abstract class Filter implements FilterInterface
 
     public function getOption($name, $default = null)
     {
-        if (array_key_exists($name, $this->options)) {
+        if (\array_key_exists($name, $this->options)) {
             return $this->options[$name];
         }
 
@@ -87,7 +89,7 @@ abstract class Filter implements FilterInterface
 
     public function getFieldOption($name, $default = null)
     {
-        if (isset($this->options['field_options'][$name]) && is_array($this->options['field_options'])) {
+        if (isset($this->options['field_options'][$name]) && \is_array($this->options['field_options'])) {
             return $this->options['field_options'][$name];
         }
 

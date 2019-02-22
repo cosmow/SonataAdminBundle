@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -39,7 +41,7 @@ class BreadcrumbsBuilderTest extends TestCase
     /**
      * @group legacy
      */
-    public function testGetBreadcrumbs()
+    public function testGetBreadcrumbs(): void
     {
         $postAdminSubjectId = 42;
         $commentAdminSubjectId = 100500;
@@ -217,7 +219,7 @@ class BreadcrumbsBuilderTest extends TestCase
     /**
      * @group legacy
      */
-    public function testGetBreadcrumbsWithNoCurrentAdmin()
+    public function testGetBreadcrumbsWithNoCurrentAdmin(): void
     {
         $postAdminSubjectId = 42;
         $commentAdminSubjectId = 100500;
@@ -300,7 +302,7 @@ class BreadcrumbsBuilderTest extends TestCase
         $this->assertSame($flagBreadcrumb, $postAdmin->getBreadcrumbs('flag'));
     }
 
-    public function testUnitChildGetBreadCrumbs()
+    public function testUnitChildGetBreadCrumbs(): void
     {
         $menu = $this->prophesize(ItemInterface::class);
         $menu->getParent()->willReturn(null);
@@ -441,7 +443,7 @@ class BreadcrumbsBuilderTest extends TestCase
     /**
      * @dataProvider actionProvider
      */
-    public function testUnitBuildBreadcrumbs($action)
+    public function testUnitBuildBreadcrumbs($action): void
     {
         $breadcrumbsBuilder = new BreadcrumbsBuilder();
 
@@ -478,7 +480,7 @@ class BreadcrumbsBuilderTest extends TestCase
             'breadcrumb',
             'link'
         )->willReturn('My action');
-        if ('create' == $action) {
+        if ('create' === $action) {
             $labelTranslatorStrategy->getLabel(
                 'my_class_name_create',
                 'breadcrumb',
@@ -502,11 +504,13 @@ class BreadcrumbsBuilderTest extends TestCase
         $admin->hasAccess('list')->willReturn(true);
         $admin->generateUrl('list')->willReturn('/myadmin/list');
         $admin->getCurrentChildAdmin()->willReturn(
-            'my_action' == $action ? $childAdmin->reveal() : false
+            'my_action' === $action ? $childAdmin->reveal() : false
         );
-        if ('list' == $action) {
+        if ('list' === $action) {
             $admin->isChild()->willReturn(true);
             $menu->setUri(false)->shouldBeCalled();
+        } else {
+            $menu->setUri()->shouldNotBeCalled();
         }
         $request = $this->prophesize(Request::class);
         $request->get('slug')->willReturn('my-object');

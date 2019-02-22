@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -93,7 +95,7 @@ class DefaultRouteGenerator implements RouteGeneratorInterface
             $parameters['puniqid'] = $admin->getParentFieldDescription()->getAdmin()->getUniqid();
         }
 
-        if ('update' == $name || '|update' == substr($name, -7)) {
+        if ('update' === $name || '|update' === substr($name, -7)) {
             $parameters['uniqid'] = $admin->getUniqid();
             $parameters['code'] = $admin->getCode();
         }
@@ -105,7 +107,7 @@ class DefaultRouteGenerator implements RouteGeneratorInterface
 
         $code = $this->getCode($admin, $name);
 
-        if (!array_key_exists($code, $this->caches)) {
+        if (!\array_key_exists($code, $this->caches)) {
             throw new \RuntimeException(sprintf('unable to find the route `%s`', $code));
         }
 
@@ -118,20 +120,15 @@ class DefaultRouteGenerator implements RouteGeneratorInterface
 
     public function hasAdminRoute(AdminInterface $admin, $name)
     {
-        return array_key_exists($this->getCode($admin, $name), $this->caches);
+        return \array_key_exists($this->getCode($admin, $name), $this->caches);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return string
-     */
-    private function getCode(AdminInterface $admin, $name)
+    private function getCode(AdminInterface $admin, string $name): string
     {
         $this->loadCache($admin);
 
         // someone provide the fullname
-        if (!$admin->isChild() && array_key_exists($name, $this->caches)) {
+        if (!$admin->isChild() && \array_key_exists($name, $this->caches)) {
             return $name;
         }
 
@@ -153,18 +150,20 @@ class DefaultRouteGenerator implements RouteGeneratorInterface
         return $codePrefix.'.'.$name;
     }
 
-    private function loadCache(AdminInterface $admin)
+    private function loadCache(AdminInterface $admin): void
     {
         if ($admin->isChild()) {
             $this->loadCache($admin->getParent());
-        } else {
-            if (in_array($admin->getCode(), $this->loaded)) {
-                return;
-            }
 
-            $this->caches = array_merge($this->cache->load($admin), $this->caches);
-
-            $this->loaded[] = $admin->getCode();
+            return;
         }
+
+        if (\in_array($admin->getCode(), $this->loaded, true)) {
+            return;
+        }
+
+        $this->caches = array_merge($this->cache->load($admin), $this->caches);
+
+        $this->loaded[] = $admin->getCode();
     }
 }

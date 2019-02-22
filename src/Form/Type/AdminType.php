@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -39,7 +41,7 @@ class AdminType extends AbstractType
         }
 
         if ($options['delete'] && $admin->hasAccess('delete')) {
-            if (!array_key_exists('translation_domain', $options['delete_options']['type_options'])) {
+            if (!\array_key_exists('translation_domain', $options['delete_options']['type_options'])) {
                 $options['delete_options']['type_options']['translation_domain'] = $admin->getTranslationDomain();
             }
 

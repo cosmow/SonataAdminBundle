@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -137,7 +139,10 @@ class Datagrid implements DatagridInterface
 
         foreach ($this->getFilters() as $name => $filter) {
             $this->values[$name] = isset($this->values[$name]) ? $this->values[$name] : null;
-            $filter->apply($this->query, $data[$filter->getFormName()]);
+            $filterFormName = $filter->getFormName();
+            if (isset($this->values[$filterFormName]['value']) && '' !== $this->values[$filterFormName]['value']) {
+                $filter->apply($this->query, $data[$filterFormName]);
+            }
         }
 
         if (isset($this->values['_sort_by'])) {

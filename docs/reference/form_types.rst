@@ -11,8 +11,8 @@ relationships between one entity class and another.
 
 .. _field-types-model:
 
-``Sonata\AdminBundle\Form\Type\ModelType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\ModelType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This type allows you to choose an existing
 entity from the linked model class. In effect it shows a list of options from
@@ -20,18 +20,15 @@ which you can choose a value (or values).
 
 For example, we have an entity class called ``Page`` which has a field called
 ``image1`` which maps a relationship to another entity class called ``Image``.
-All we need to do now is add a reference for this field in our ``PageAdmin`` class:
+All we need to do now is add a reference for this field in our ``PageAdmin`` class::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ModelType;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -44,7 +41,7 @@ All we need to do now is add a reference for this field in our ``PageAdmin`` cla
     }
 
 Note that the third parameter to ``FormMapper::add()`` is optional so
-there is no need to pass in an empty array, it is shown here just to demonstrate
+there is no need to pass in an empty array, it is shown here only to demonstrate
 where the options go when you want to use them.
 
 Since the ``image1`` field refers to a related entity we do not need to specify
@@ -119,25 +116,22 @@ The available options are:
     (``sonata-admin-setup-list-modal`` by default and
     ``sonata-admin-append-form-element`` when using ``edit:inline``).
 
-``Sonata\AdminBundle\Form\Type\ModelListType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\ModelListType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This type allows you to choose an existing entity,
 add a new one or edit the one that is already selected.
 
 For example, we have an entity class called ``Page`` which has a field called
 ``image1`` which maps a relationship to another entity class called ``Image``.
-All we need to do now is add a reference for this field in our ``PageAdmin`` class:
+All we need to do now is add a reference for this field in our ``PageAdmin`` class::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\Type\ModelListType;
     use Sonata\AdminBundle\Form\FormMapper;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -168,20 +162,17 @@ The available options are:
 
     For more info, see the storage-engine-specific form field definitions: `ORM`_, `PHPCR`_, `MongoDB`_
 
-``Sonata\AdminBundle\Form\Type\ModelHiddenType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The value of hidden field is identifier of related entity.
+Sonata\AdminBundle\Form\Type\ModelHiddenType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The value of hidden field is identifier of related entity::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ModelHiddenType;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -203,8 +194,8 @@ The available options are:
   calculated from the linked admin class. You usually should not need to set
   this manually.
 
-``Sonata\AdminBundle\Form\Type\ModelAutocompleteType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\ModelAutocompleteType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This type allows you to choose an existing entity from the linked model class.
 In effect it shows a list of options from which you can choose a value.
@@ -218,18 +209,15 @@ For example, we have an entity class called ``Article`` (in the ``ArticleAdmin``
 which has a field called ``category`` which maps a relationship to another entity
 class called ``Category``. All we need to do now is add a reference for this field
 in our ``ArticleAdmin`` class and make sure, that in the ``CategoryAdmin`` exists
-datagrid filter for the property ``title``.
+datagrid filter for the property ``title``::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/ArticleAdmin.php
+    // src/Admin/ArticleAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ModelAutocompleteType;
 
-    class ArticleAdmin extends AbstractAdmin
+    final class ArticleAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -245,13 +233,12 @@ datagrid filter for the property ``title``.
 
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/CategoryAdmin.php
+    // src/Admin/CategoryAdmin.php
 
     use Sonata\AdminBundle\Datagrid\DatagridMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
 
-    class CategoryAdmin extends AbstractAdmin
+    final class CategoryAdmin extends AbstractAdmin
     {
         protected function configureDatagridFilters(DatagridMapper $datagridMapper)
         {
@@ -282,9 +269,7 @@ The available options are:
   The callback should receive three parameters - the admin instance, the property (or properties) defined as searchable and the
   search value entered by the user.
 
-  From the ``$admin`` parameter it is possible to get the ``Datagrid`` and the ``Request``:
-
-.. code-block:: php
+  From the ``$admin`` parameter it is possible to get the ``Datagrid`` and the ``Request``::
 
     $formMapper
         ->add('category', ModelAutocompleteType::class, [
@@ -302,9 +287,7 @@ The available options are:
     ;
 
 ``to_string_callback``
-  defaults to ``null``. Callable function that can be used to change the default toString behaviour of entity.
-
-.. code-block:: php
+  defaults to ``null``. Callable function that can be used to change the default toString behaviour of entity::
 
     $formMapper
         ->add('category', ModelAutocompleteType::class, [
@@ -357,6 +340,10 @@ The available options are:
 ``dropdown_item_css_class``
   defaults to "". CSS class of dropdown item.
 
+``safe_label``
+  defaults to ``false``. Set to ``true`` to enable the label to be displayed as raw HTML,
+  which may cause an XSS vulnerability.
+
 ``req_param_name_search``
   defaults to "q". Ajax request parameter name which contains the searched text.
 
@@ -368,31 +355,28 @@ The available options are:
   items per page.
 
 ``template``
-  defaults to ``SonataAdminBundle:Form/Type:sonata_type_model_autocomplete.html.twig``.
+  defaults to ``@SonataAdmin/Form/Type/sonata_type_model_autocomplete.html.twig``.
   Use this option if you want to override the default template of this form type.
 
 ``btn_add`` and ``btn_catalogue``:
   The labels on the ``add`` button can be customized with these parameters.
   Setting any of them to ``false`` will hide the corresponding button. You can also specify
-  a custom translation catalogue for these labels, which defaults to ``SonataAdminBundle``.
+  a custom translation catalogue for these labels, which defaults to ``SonataAdminBundle``::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/ArticleAdmin.php
+    // src/Admin/ArticleAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ModelAutocompleteType;
 
-    class ArticleAdmin extends AbstractAdmin
+    final class ArticleAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
             $formMapper
                 ->add('category', ModelAutocompleteType::class, [
                     'property' => 'title',
-                    'template' => 'AppBundle:Form/Type:sonata_type_model_autocomplete.html.twig',
+                    'template' => '@App/Form/Type/sonata_type_model_autocomplete.html.twig',
                 ])
             ;
         }
@@ -400,9 +384,9 @@ The available options are:
 
 .. code-block:: jinja
 
-    {# src/AppBundle/Resources/views/Form/Type/sonata_type_model_autocomplete.html.twig #}
+    {# templates/Form/Type/sonata_type_model_autocomplete.html.twig #}
 
-    {% extends 'SonataAdminBundle:Form/Type:sonata_type_model_autocomplete.html.twig' %}
+    {% extends '@SonataAdmin/Form/Type/sonata_type_model_autocomplete.html.twig' %}
 
     {# change the default selection format #}
     {% block sonata_type_model_autocomplete_selection_format %}'<b>'+item.label+'</b>'{% endblock %}
@@ -416,18 +400,15 @@ The available options are:
 
   In the example below we changed the ``target_admin_access_action`` from ``list`` to ``autocomplete``,
   which is mapped in the target admin to ``AUTOCOMPLETE`` role. Please make sure that all valid users
-  have the ``AUTOCOMPLETE`` role.
+  have the ``AUTOCOMPLETE`` role::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/ArticleAdmin.php
+    // src/Admin/ArticleAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ModelAutocompleteType;
 
-    class ArticleAdmin extends AbstractAdmin
+    final class ArticleAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -444,13 +425,12 @@ The available options are:
 
 .. code-block:: php
 
-    <?php
-    // src/AppBundle/Admin/CategoryAdmin.php
+    // src/Admin/CategoryAdmin.php
 
     use Sonata\AdminBundle\Datagrid\DatagridMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
 
-    class CategoryAdmin extends AbstractAdmin
+    final class CategoryAdmin extends AbstractAdmin
     {
         protected $accessMapping = [
             'autocomplete' => 'AUTOCOMPLETE',
@@ -466,22 +446,19 @@ The available options are:
         }
     }
 
-``Sonata\AdminBundle\Form\Type\ChoiceFieldMaskType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\ChoiceFieldMaskType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-According the choice made only associated fields are displayed. The others fields are hidden.
+According the choice made only associated fields are displayed. The others fields are hidden::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/AppMenuAdmin.php
+    // src/Admin/AppMenuAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\ChoiceFieldMaskType;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-    class AppMenuAdmin extends AbstractAdmin
+    final class AppMenuAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -508,9 +485,8 @@ According the choice made only associated fields are displayed. The others field
 ``map``
   Associative array. Describes the fields that are displayed for each choice.
 
-
-``Sonata\AdminBundle\Form\Type\AdminType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\AdminType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Setting a field type of ``Sonata\AdminBundle\Form\Type\AdminType`` will embed another admin class
 and use the embedded admin's configuration when editing this field.
@@ -523,49 +499,40 @@ related objects.
 
 For example, lets use a similar example to the one for ``Sonata\AdminBundle\Form\Type\ModelType`` above.
 This time, when editing a ``Page`` using ``PageAdmin`` we want to enable the inline
-creation (and editing) of new Images instead of just selecting an existing Image
-from a list.
+creation (and editing) of new Images instead of selecting an existing Image from a list.
 
 First we need to create an ``ImageAdmin`` class and register it as an admin class
-for managing ``Image`` objects. In our ``admin.yml`` we have an entry for ``ImageAdmin``
+for managing ``Image`` objects. In our ``services.yaml`` we have an entry for ``ImageAdmin``
 that looks like this:
 
 .. configuration-block::
 
     .. code-block:: yaml
 
-        # src/AppBundle/Resources/config/admin.yml
+        # config/services.yaml
 
         services:
             app.admin.image:
-                class: AppBundle\Admin\ImageAdmin
-                tags:
-                    - { name: sonata.admin, manager_type: orm, label: "Image" }
+                class: App\Admin\ImageAdmin
                 arguments:
                     - ~
-                    - AppBundle\Entity\Image
-                    - 'SonataAdminBundle:CRUD'
+                    - App\Entity\Image
+                    - 'Sonata\AdminBundle\Controller\CRUDController'
                 calls:
-                    - [ setTranslationDomain, [AppBundle]]
-                public: true
+                    - [setTranslationDomain, ['App']]
+                tags:
+                    - { name: sonata.admin, manager_type: orm, label: 'Image' }
 
-.. note::
+To embed ``ImageAdmin`` within ``PageAdmin`` we need to change the reference
+for the ``image1`` field to ``AdminType`` in our ``PageAdmin`` class::
 
-    Refer to `Getting started documentation`_ to see how to define your ``admin.yml`` file.
-
-To embed ``ImageAdmin`` within ``PageAdmin`` we just need to change the reference
-for the ``image1`` field to ``sonata_type_admin`` in our ``PageAdmin`` class:
-
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\AdminType;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -576,7 +543,7 @@ for the ``image1`` field to ``sonata_type_admin`` in our ``PageAdmin`` class:
     }
 
 We do not need to define any options since Sonata calculates that the linked class
-is of type ``Image`` and the service definition (in ``admin.yml``) defines that ``Image``
+is of type ``Image`` and the service definition (in ``services.yaml``) defines that ``Image``
 objects are managed by the ``ImageAdmin`` class.
 
 The available options (which can be passed as a third parameter to ``FormMapper::add()``) are:
@@ -591,36 +558,33 @@ The available options (which can be passed as a third parameter to ``FormMapper:
   corresponding button. You can also specify a custom translation catalogue
   for these labels, which defaults to ``SonataAdminBundle``.
 
+Sonata\Form\Type\CollectionType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``Sonata\CoreBundle\Form\Type\CollectionType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``Sonata\CoreBundle\Form\Type\CollectionType`` is meant to handle creation and editing of model
+The ``Sonata\Form\Type\CollectionType`` is meant to handle creation and editing of model
 collections. Rows can be added and deleted, and your model abstraction layer may
 allow you to edit fields inline. You can use ``type_options`` to pass values
-to the underlying forms.
+to the underlying forms::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/ProductAdmin.php
+    // src/Admin/ProductAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
-    use Sonata\CoreBundle\Form\Type\CollectionType;
+    use Sonata\Form\Type\CollectionType;
+    use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 
-    class ProductAdmin extends AbstractAdmin
+    final class ProductAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
             $formMapper
-                ->add('sales', 'sonata_type_collection', [
+                ->add('sales', CollectionType::class, [
                     'type_options' => [
                         // Prevents the "Delete" option from being displayed
                         'delete' => false,
                         'delete_options' => [
                             // You may otherwise choose to put the field but hide it
-                            'type'         => 'hidden',
+                            'type'         => HiddenType::class,
                             // In that case, you need to fill in the options as well
                             'type_options' => [
                                 'mapped'   => false,
@@ -633,12 +597,8 @@ to the underlying forms.
                     'inline' => 'table',
                     'sortable' => 'position',
                 ])
-
-                // ...
             ;
         }
-
-        // ...
     }
 
 The available options (which can be passed as a third parameter to ``FormMapper::add()``) are:
@@ -660,8 +620,8 @@ Setting the 'required' option to ``false`` causes all nested form fields to beco
     You can check / uncheck a range of checkboxes by clicking a first one,
     then a second one with shift + click.
 
-``Sonata\AdminBundle\Form\Type\CollectionType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sonata\AdminBundle\Form\Type\CollectionType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This bundle handle the native Symfony ``collection`` form type by adding:
 
@@ -696,18 +656,15 @@ model type will  be used.
 
 For example, to specify the use of the admin class which is registered as
 ``sonata.admin.imageSpecial`` for managing the ``image1`` field from our ``PageAdmin``
-example above:
+example above::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
     use Sonata\AdminBundle\Form\Type\AdminType;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -715,12 +672,8 @@ example above:
                 ->add('image1', AdminType::class, [], [
                     'admin_code' => 'sonata.admin.imageSpecial'
                 ])
-
-                // ...
             ;
         }
-
-        // ...
     }
 
 Other specific field configuration options are detailed in the related
@@ -731,12 +684,9 @@ Adding a FormBuilderInterface
 You can add Symfony ``FormBuilderInterface`` instances to the ``FormMapper``. This allows you to
 re-use a model form type. When adding a field using a ``FormBuilderInterface``, the type is guessed.
 
-Given you have a ``PostType`` like this:
+Given you have a ``PostType`` like this::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Form/PostType.php
+    // src/Form/PostType.php
 
     use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -758,18 +708,15 @@ Given you have a ``PostType`` like this:
         }
     }
 
-you can reuse it like this:
+you can reuse it like this::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/Post.php
+    // src/Admin/Post.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
-    use AppBundle\Form\PostType;
+    use App\Form\PostType;
 
-    class Post extend AbstractAdmin
+    final class Post extend AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -787,24 +734,20 @@ you can reuse it like this:
         }
     }
 
-
 Types options
 -------------
 
 General
 ^^^^^^^
 
-- ``label``: You can set the ``label`` option to ``false`` if you don't want to show it.
+- ``label``: You can set the ``label`` option to ``false`` if you don't want to show it::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -812,29 +755,22 @@ General
                 ->add('status', null, [
                     'label' => false
                 ])
-
-                // ...
             ;
         }
-
-        // ...
     }
 
-``Symfony\Component\Form\Extension\Core\Type\ChoiceType``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Symfony\Component\Form\Extension\Core\Type\ChoiceType
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- ``sortable``: This option can be added for multiple choice widget to activate select2 sortable.
+- ``sortable``: This option can be added for multiple choice widget to activate select2 sortable::
 
-.. code-block:: php
-
-    <?php
-    // src/AppBundle/Admin/PageAdmin.php
+    // src/Admin/PageAdmin.php
 
     use Sonata\AdminBundle\Form\FormMapper;
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     use Sonata\AdminBundle\Admin\AbstractAdmin;
 
-    class PageAdmin extends AbstractAdmin
+    final class PageAdmin extends AbstractAdmin
     {
         protected function configureFormFields(FormMapper $formMapper)
         {
@@ -843,18 +779,13 @@ General
                     'multiple' => true,
                     'sortable' => true,
                 ])
-
-                // ...
             ;
         }
-
-        // ...
     }
 
 .. _`Symfony field types`: http://symfony.com/doc/current/book/forms.html#built-in-field-types
 .. _`Symfony choice Field Type docs`: http://symfony.com/doc/current/reference/forms/types/choice.html
 .. _`Symfony PropertyPath`: http://api.symfony.com/2.0/Symfony/Component/Form/Util/PropertyPath.html
-.. _`Getting started documentation`: https://sonata-project.org/bundles/admin/master/doc/reference/getting_started.html#importing-it-in-the-main-config-yml
 .. _`ORM`: https://sonata-project.org/bundles/doctrine-orm-admin/master/doc/reference/form_field_definition.html
 .. _`PHPCR`: https://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/reference/form_field_definition.html
 .. _`MongoDB`: https://sonata-project.org/bundles/mongo-admin/master/doc/reference/form_field_definition.html

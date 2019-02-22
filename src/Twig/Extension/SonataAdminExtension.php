@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Sonata Project package.
  *
@@ -17,18 +19,34 @@ use Sonata\AdminBundle\Admin\AdminInterface;
 use Sonata\AdminBundle\Admin\FieldDescriptionInterface;
 use Sonata\AdminBundle\Admin\Pool;
 use Sonata\AdminBundle\Exception\NoValueException;
+use Sonata\AdminBundle\Templating\TemplateRegistryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\Security\Acl\Voter\FieldVote;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationCredentialsNotFoundException;
 use Symfony\Component\Translation\TranslatorInterface;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Extension\AbstractExtension;
 use Twig\Template;
+use Twig\TemplateWrapper;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 /**
  * @author Thomas Rabaix <thomas.rabaix@sonata-project.org>
  */
 class SonataAdminExtension extends AbstractExtension
 {
+    // @todo: there are more locales which are not supported by moment and they need to be translated/normalized/canonicalized here
+    public const MOMENT_UNSUPPORTED_LOCALES = [
+        'es' => ['es', 'es-do'],
+        'nl' => ['nl', 'nl-be'],
+        'fr' => ['fr', 'fr-ca', 'fr-ch'],
+    ];
+
     /**
      * @var Pool
      */
@@ -49,8 +67,23 @@ class SonataAdminExtension extends AbstractExtension
      */
     private $xEditableTypeMapping = [];
 
-    public function __construct(Pool $pool, LoggerInterface $logger = null, TranslatorInterface $translator = null)
-    {
+    /**
+     * @var ContainerInterface
+     */
+    private $templateRegistries;
+
+    /**
+     * @var AuthorizationCheckerInterface
+     */
+    private $securityChecker;
+
+    public function __construct(
+        Pool $pool,
+        LoggerInterface $logger = null,
+        TranslatorInterface $translator = null,
+        ContainerInterface $templateRegistries = null,
+        AuthorizationCheckerInterface $securityChecker = null
+    ) {
         // NEXT_MAJOR: make the translator parameter required
         if (null === $translator) {
             @trigger_error(
@@ -61,6 +94,8 @@ class SonataAdminExtension extends AbstractExtension
         $this->pool = $pool;
         $this->logger = $logger;
         $this->translator = $translator;
+        $this->templateRegistries = $templateRegistries;
+        $this->securityChecker = $securityChecker;
     }
 
     public function getFilters()
@@ -109,6 +144,15 @@ class SonataAdminExtension extends AbstractExtension
         ];
     }
 
+    public function getFunctions()
+    {
+        return [
+            new TwigFunction('canonicalize_locale_for_moment', [$this, 'getCanonicalizedLocaleForMoment'], ['needs_context' => true]),
+            new TwigFunction('canonicalize_locale_for_select2', [$this, 'getCanonicalizedLocaleForSelect2'], ['needs_context' => true]),
+            new TwigFunction('is_granted_affirmative', [$this, 'isGrantedAffirmative']),
+        ];
+    }
+
     public function getName()
     {
         return 'sonata_admin';
@@ -130,11 +174,13 @@ class SonataAdminExtension extends AbstractExtension
     ) {
         $template = $this->getTemplate(
             $fieldDescription,
+            // NEXT_MAJOR: Remove this line and use commented line below instead
             $fieldDescription->getAdmin()->getTemplate('base_list_field'),
+            //$this->getTemplateRegistry($fieldDescription->getAdmin()->getCode())->getTemplate('base_list_field'),
             $environment
         );
 
-        return $this->output($fieldDescription, $template, array_merge($params, [
+        return $this->render($fieldDescription, $template, array_merge($params, [
             'admin' => $fieldDescription->getAdmin(),
             'object' => $object,
             'value' => $this->getValueFromFieldDescription($object, $fieldDescription),
@@ -143,6 +189,8 @@ class SonataAdminExtension extends AbstractExtension
     }
 
     /**
+     * @deprecated since 3.33, to be removed in 4.0. Use render instead
+     *
      * @return string
      */
     public function output(
@@ -151,31 +199,12 @@ class SonataAdminExtension extends AbstractExtension
         array $parameters,
         Environment $environment
     ) {
-        $content = $template->render($parameters);
-
-        if ($environment->isDebug()) {
-            $commentTemplate = <<<'EOT'
-
-<!-- START
-    fieldName: %s
-    template: %s
-    compiled template: %s
-    -->
-    %s
-<!-- END - fieldName: %s -->
-EOT;
-
-            return sprintf(
-                $commentTemplate,
-                $fieldDescription->getFieldName(),
-                $fieldDescription->getTemplate(),
-                $template->getTemplateName(),
-                $content,
-                $fieldDescription->getFieldName()
-            );
-        }
-
-        return $content;
+        return $this->render(
+            $fieldDescription,
+            new TemplateWrapper($environment, $template),
+            $parameters,
+            $environment
+        );
     }
 
     /**
@@ -224,7 +253,7 @@ EOT;
     ) {
         $template = $this->getTemplate(
             $fieldDescription,
-            'SonataAdminBundle:CRUD:base_show_field.html.twig',
+            '@SonataAdmin/CRUD/base_show_field.html.twig',
             $environment
         );
 
@@ -234,7 +263,7 @@ EOT;
             $value = null;
         }
 
-        return $this->output($fieldDescription, $template, [
+        return $this->render($fieldDescription, $template, [
             'field_description' => $fieldDescription,
             'object' => $object,
             'value' => $value,
@@ -258,7 +287,7 @@ EOT;
     ) {
         $template = $this->getTemplate(
             $fieldDescription,
-            'SonataAdminBundle:CRUD:base_show_field.html.twig',
+            '@SonataAdmin/CRUD/base_show_field.html.twig',
             $environment
         );
 
@@ -289,7 +318,7 @@ EOT;
         // Compare the rendered output of both objects by using the (possibly) overridden field block
         $isDiff = $baseValueOutput !== $compareValueOutput;
 
-        return $this->output($fieldDescription, $template, [
+        return $this->render($fieldDescription, $template, [
             'field_description' => $fieldDescription,
             'value' => $baseValue,
             'value_compare' => $compareValue,
@@ -307,7 +336,7 @@ EOT;
      */
     public function renderRelationElement($element, FieldDescriptionInterface $fieldDescription)
     {
-        if (!is_object($element)) {
+        if (!\is_object($element)) {
             return $element;
         }
 
@@ -331,16 +360,16 @@ EOT;
                 throw new \RuntimeException(sprintf(
                     'You must define an `associated_property` option or '.
                     'create a `%s::__toString` method to the field option %s from service %s is ',
-                    get_class($element),
+                    \get_class($element),
                     $fieldDescription->getName(),
                     $fieldDescription->getAdmin()->getCode()
                 ));
             }
 
-            return call_user_func([$element, $method]);
+            return \call_user_func([$element, $method]);
         }
 
-        if (is_callable($propertyPath)) {
+        if (\is_callable($propertyPath)) {
             return $propertyPath($element);
         }
 
@@ -397,14 +426,14 @@ EOT;
             reset($choices);
             $first = current($choices);
             // the choices are already in the right format
-            if (is_array($first) && array_key_exists('value', $first) && array_key_exists('text', $first)) {
+            if (\is_array($first) && \array_key_exists('value', $first) && \array_key_exists('text', $first)) {
                 $xEditableChoices = $choices;
             } else {
                 foreach ($choices as $value => $text) {
                     if ($catalogue) {
                         if (null !== $this->translator) {
                             $text = $this->translator->trans($text, [], $catalogue);
-                            // NEXT_MAJOR: Remove this check
+                        // NEXT_MAJOR: Remove this check
                         } elseif (method_exists($fieldDescription->getAdmin(), 'trans')) {
                             $text = $fieldDescription->getAdmin()->trans($text, [], $catalogue);
                         }
@@ -418,7 +447,108 @@ EOT;
             }
         }
 
+        if (false === $fieldDescription->getOption('required', true)
+            && false === $fieldDescription->getOption('multiple', false)
+        ) {
+            $xEditableChoices = array_merge([[
+                'value' => '',
+                'text' => '',
+            ]], $xEditableChoices);
+        }
+
         return $xEditableChoices;
+    }
+
+    /**
+     * Returns a canonicalized locale for "moment" NPM library,
+     * or `null` if the locale's language is "en", which doesn't require localization.
+     *
+     * @return string|null
+     */
+    final public function getCanonicalizedLocaleForMoment(array $context)
+    {
+        $locale = strtolower(str_replace('_', '-', $context['app']->getRequest()->getLocale()));
+
+        // "en" language doesn't require localization.
+        if (('en' === $lang = substr($locale, 0, 2)) && !\in_array($locale, ['en-au', 'en-ca', 'en-gb', 'en-ie', 'en-nz'], true)) {
+            return null;
+        }
+
+        foreach (self::MOMENT_UNSUPPORTED_LOCALES as $language => $locales) {
+            if ($language === $lang && !\in_array($locale, $locales, true)) {
+                $locale = $language;
+            }
+        }
+
+        return $locale;
+    }
+
+    /**
+     * Returns a canonicalized locale for "select2" NPM library,
+     * or `null` if the locale's language is "en", which doesn't require localization.
+     *
+     * @return string|null
+     */
+    final public function getCanonicalizedLocaleForSelect2(array $context)
+    {
+        $locale = str_replace('_', '-', $context['app']->getRequest()->getLocale());
+
+        // "en" language doesn't require localization.
+        if ('en' === $lang = substr($locale, 0, 2)) {
+            return null;
+        }
+
+        switch ($locale) {
+            case 'pt':
+                $locale = 'pt-PT';
+                break;
+            case 'ug':
+                $locale = 'ug-CN';
+                break;
+            case 'zh':
+                $locale = 'zh-CN';
+                break;
+            default:
+                if (!\in_array($locale, ['pt-BR', 'pt-PT', 'ug-CN', 'zh-CN', 'zh-TW'], true)) {
+                    $locale = $lang;
+                }
+        }
+
+        return $locale;
+    }
+
+    /**
+     * @param string|array $role
+     * @param object|null  $object
+     * @param string|null  $field
+     *
+     * @return bool
+     */
+    public function isGrantedAffirmative($role, $object = null, $field = null)
+    {
+        if (null === $this->securityChecker) {
+            return false;
+        }
+
+        if (null !== $field) {
+            $object = new FieldVote($object, $field);
+        }
+
+        if (!\is_array($role)) {
+            $role = [$role];
+        }
+
+        foreach ($role as $oneRole) {
+            try {
+                if ($this->securityChecker->isGranted($oneRole, $object)) {
+                    return true;
+                }
+            } catch (AuthenticationCredentialsNotFoundException $e) {
+                // empty on purpose
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -426,7 +556,7 @@ EOT;
      *
      * @param string $defaultTemplate
      *
-     * @return \Twig_TemplateInterface
+     * @return TemplateWrapper
      */
     protected function getTemplate(
         FieldDescriptionInterface $fieldDescription,
@@ -436,7 +566,7 @@ EOT;
         $templateName = $fieldDescription->getTemplate() ?: $defaultTemplate;
 
         try {
-            $template = $environment->loadTemplate($templateName);
+            $template = $environment->load($templateName);
         } catch (LoaderError $e) {
             @trigger_error(
                 'Relying on default template loading on field template loading exception '.
@@ -444,7 +574,7 @@ EOT;
                 'A \Twig_Error_Loader exception will be thrown instead',
                 E_USER_DEPRECATED
             );
-            $template = $environment->loadTemplate($defaultTemplate);
+            $template = $environment->load($defaultTemplate);
 
             if (null !== $this->logger) {
                 $this->logger->warning(sprintf(
@@ -458,5 +588,54 @@ EOT;
         }
 
         return $template;
+    }
+
+    private function render(
+        FieldDescriptionInterface $fieldDescription,
+        TemplateWrapper $template,
+        array $parameters,
+        Environment $environment
+    ): ?string {
+        $content = $template->render($parameters);
+
+        if ($environment->isDebug()) {
+            $commentTemplate = <<<'EOT'
+
+<!-- START
+    fieldName: %s
+    template: %s
+    compiled template: %s
+    -->
+    %s
+<!-- END - fieldName: %s -->
+EOT;
+
+            return sprintf(
+                $commentTemplate,
+                $fieldDescription->getFieldName(),
+                $fieldDescription->getTemplate(),
+                $template->getSourceContext()->getName(),
+                $content,
+                $fieldDescription->getFieldName()
+            );
+        }
+
+        return $content;
+    }
+
+    /**
+     * @throws ServiceCircularReferenceException
+     * @throws ServiceNotFoundException
+     */
+    private function getTemplateRegistry(string $adminCode): TemplateRegistryInterface
+    {
+        $serviceId = $adminCode.'.template_registry';
+        $templateRegistry = $this->templateRegistries->get($serviceId);
+
+        if ($templateRegistry instanceof TemplateRegistryInterface) {
+            return $templateRegistry;
+        }
+
+        throw new ServiceNotFoundException($serviceId);
     }
 }
